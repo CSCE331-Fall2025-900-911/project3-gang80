@@ -1,9 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import MainMenu from "./pages/MainMenu";
+import Cashier from "./pages/Cashier";
 import Inventory from "./pages/Inventory";
+import Employees from "./pages/Employees";
 import Analytics from "./pages/Analytics";
 import Kiosk from "./pages/Kiosk";
+
 
 
 function App() {
@@ -12,8 +14,9 @@ function App() {
       <Navbar />
       <div style={{ marginLeft: "200px", padding: "20px" }}>
         <Routes>
-          <Route path="/" element={<MainMenu/>} />
+          <Route path="/" element={<Cashier/>} />
           <Route path="/inventory" element={<Inventory/>} />
+          <Route path="/employees" element={<Employees/>} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/kiosk" element={<Kiosk/>} />
         </Routes>

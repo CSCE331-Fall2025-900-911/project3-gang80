@@ -12,12 +12,17 @@ function Navbar() {
       <ul className="nav-links">
         <li>
           <NavLink to="/" end>
-            Main Menu
+            Cashier
           </NavLink>
         </li>
         <li>
           <NavLink to="/inventory">
             Inventory
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/employees">
+            Employees
           </NavLink>
         </li>
         <li>
