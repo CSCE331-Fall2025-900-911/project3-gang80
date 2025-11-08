@@ -1,14 +1,15 @@
 from flask import Blueprint, jsonify
 from db import db
+import models
+from helpers.permissions import Roles, has_permission
 
 bp = Blueprint('database', __name__)
 
-# Define the table mapping
-class MenuItem(db.Model):
-    __tablename__ = "menu_items"
-    id = db.Column(db.Integer, primary_key=True)
+# Define Routes
 
 @bp.route('/menu_items', methods=['GET'])
 def get_items():
-    count = db.session.query(MenuItem).count()  # SQLAlchemy row count
+    if not has_permission("TokenHere", Roles.MANAGER, Roles.EMPLOYEE):
+        return "error" # 401 is failure to authenticate, 403 is no authorization, how to send it out though?
+    count = db.session.query(models.MenuItem).count()  # SQLAlchemy row count
     return jsonify({"menu_items_count": count})
