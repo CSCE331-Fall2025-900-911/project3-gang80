@@ -1,3 +1,5 @@
 flask
 flask_sqlalchemy
 psycopg2-binary
+google-auth>=2.23.0
+requests>=2.31.0
