@@ -1,17 +1,23 @@
-// App.tsx
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
-import About from "./pages/About";
+import MainMenu from "./pages/MainMenu";
+import Inventory from "./pages/Inventory";
+import Analytics from "./pages/Analytics";
+import Kiosk from "./pages/Kiosk";
+
 
 function App() {
   return (
     <Router>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-      </Routes>
+      <div style={{ marginLeft: "200px", padding: "20px" }}>
+        <Routes>
+          <Route path="/" element={<MainMenu/>} />
+          <Route path="/inventory" element={<Inventory/>} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/kiosk" element={<Kiosk/>} />
+        </Routes>
+      </div>
     </Router>
   );
 }

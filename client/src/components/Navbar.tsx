@@ -1,14 +1,35 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import logo from "../assets/sharetea_logo.png";
 import "./Navbar.css";
 
 function Navbar() {
   return (
-    <nav className="navbar">
-      <h2 className="logo">MyApp</h2>
+    <nav className="sidebar">
+      <div className="logo-container">
+        <img src={logo} alt="Logo" className="logo" />
+      </div>
+
       <ul className="nav-links">
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/about">About</Link></li>
-        <li><Link to="/contact">Contact</Link></li>
+        <li>
+          <NavLink to="/" end>
+            Main Menu
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/inventory">
+            Inventory
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/analytics">
+            Analytics
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/kiosk">
+            Kiosk
+          </NavLink>
+        </li>
       </ul>
     </nav>
   );
