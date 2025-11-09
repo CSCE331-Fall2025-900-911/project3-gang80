@@ -5,6 +5,7 @@ import Inventory from "./pages/Inventory";
 import Employees from "./pages/Employees";
 import Analytics from "./pages/Analytics";
 import Kiosk from "./pages/Kiosk";
+import Test from "./pages/Test";
 
 
 
@@ -19,6 +20,7 @@ function App() {
           <Route path="/employees" element={<Employees/>} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/kiosk" element={<Kiosk/>} />
+          <Route path="/test" element={<Test/>} />
         </Routes>
       </div>
     </Router>
