@@ -5,6 +5,7 @@ import Inventory from "./pages/Inventory";
 import Employees from "./pages/Employees";
 import Analytics from "./pages/Analytics";
 import Kiosk from "./pages/Kiosk";
+import Orders from "./pages/Orders";
 
 
 
@@ -12,13 +13,14 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <div style={{ marginLeft: "200px", padding: "20px" }}>
+      <div className="app-container" style={{ marginLeft: "250px", padding: "20px" }}>
         <Routes>
           <Route path="/" element={<Cashier/>} />
           <Route path="/inventory" element={<Inventory/>} />
           <Route path="/employees" element={<Employees/>} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/kiosk" element={<Kiosk/>} />
+          <Route path="/kiosk/order" element={<Orders />} />
         </Routes>
       </div>
     </Router>
