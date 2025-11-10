@@ -1,3 +1,5 @@
+import * as React from "react";
+import Popup from "../components/Popup";
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Orders.css";
@@ -19,6 +21,8 @@ export default function Orders() {
   const [drinks, setDrinks] = useState<
     { id: number; name: string; price: number; description: string | null; category: string }[]
   >([]);
+
+  const [showPopup, setShowPopup] = React.useState(false);
 
   // Fetch drinks when category changes
   useEffect(() => {
