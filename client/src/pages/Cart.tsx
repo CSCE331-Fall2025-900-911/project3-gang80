@@ -19,6 +19,10 @@ export default function Cart() {
     navigate("/kiosk/order", { state: { orderType: orderType } });
   };
 
+  const handleCheckout = () => {
+    navigate("/kiosk/checkout", { state: { orderType: orderType } });
+  };
+
   return (
     <div className="cart-page">
       <h1>Cart</h1>
@@ -43,7 +47,7 @@ export default function Cart() {
         <h3 className="cart-total">Total: ${total.toFixed(2)}</h3>
         <div className="cart-actions">
           <button className="back-btn" onClick={handleOrder}>Continue Ordering</button>
-          {/* <button className="checkout-btn" onClick={handleCheckout}>Checkout</button> */}
+          <button className="checkout-btn" onClick={handleCheckout}>Checkout</button>
           {/* <button className="clear-btn" onClick={handleClear}>Clear Cart</button> */}
        
         </div>
