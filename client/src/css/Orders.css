@@ -135,3 +135,15 @@
   font-size: 14px;
   opacity: 0.8;
 }
+
+.view-cart-btn {
+  padding: 12px 24px;
+  background: #D3191C;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}

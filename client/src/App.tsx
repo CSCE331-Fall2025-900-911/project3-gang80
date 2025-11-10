@@ -7,7 +7,8 @@ import Analytics from "./pages/Analytics";
 import Kiosk from "./pages/Kiosk";
 import Test from "./pages/Test";
 import Orders from "./pages/Orders";
-import './app.css'
+import './App.css'
+import Cart from "./pages/Cart";
 
 
 
@@ -24,6 +25,7 @@ function App() {
           <Route path="/kiosk" element={<Kiosk/>} />
           <Route path="/test" element={<Test/>} />
           <Route path="/kiosk/order" element={<Orders />} />
+          <Route path="/kiosk/cart" element={<Cart />} />
         </Routes>
       </div>
     </Router>

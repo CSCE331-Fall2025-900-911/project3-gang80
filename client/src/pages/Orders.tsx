@@ -1,15 +1,17 @@
 import * as React from "react";
 import Popup from "../components/Popup";
-import { useLocation } from "react-router-dom";
 //import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Orders.css";
 
 export default function Orders() {
   const API_URL = "https://project3-gang80.onrender.com/"; // switch this to localhost 5000 when testing
-  //const location = useLocation();
-  //const orderType = (location.state as { orderType: string })?.orderType || "unknown";
+  const location = useLocation();
+  const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
+  const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState<Array<{ name: string; price: number; quantity: number }>>([]);
 
   const drinkCategories = [
     "Milk Tea",
@@ -56,6 +58,21 @@ export default function Orders() {
   const handleDrinkSelect = (drink: { id: number; name: string; price: number }) => {
     console.log("Selected drink:", drink);
     // TODO: display modifications popup
+
+    // For now, just add to cart directly
+    const existing = cartItems.findIndex((item) => item.name === drink.name);
+    if (existing) {
+      setCartItems((prevItems) => {
+        const newItems = [...prevItems];
+        newItems[existing].quantity += 1;
+        return newItems;
+      });
+    } else {
+      setCartItems((prevItems) => [
+        ...prevItems,
+        { name: drink.name, price: drink.price, quantity: 1 },
+      ]);
+    }
   };
 
   return (
@@ -100,6 +117,16 @@ export default function Orders() {
               No items found.
             </div>
           )}
+        </div>
+        <div>
+          <button
+            style={{ marginTop: "20px" }}
+            onClick={() =>
+              navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems } })}
+              className="view-cart-btn"
+          >
+            Go to Cart ({cartItems.length})
+          </button>
         </div>
       </div>
     </div>
