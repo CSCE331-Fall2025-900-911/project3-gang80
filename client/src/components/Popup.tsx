@@ -3,6 +3,7 @@ import DrinkImage from "./DrinkImage";
 
 interface PopupProps {
   onClose: () => void;
+  onAdd: () => void;     
   title: string;
 }
 

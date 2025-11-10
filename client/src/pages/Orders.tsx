@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import "../css/Orders.css";
 
 export default function Orders() {
-  const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
+  const API_URL = "http://127.0.0.1:5000"; // switch this to localhost 5000 when testing
   const location = useLocation();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
@@ -27,6 +27,7 @@ export default function Orders() {
   >([]);
 
   const [showPopup, setShowPopup] = React.useState(false);
+  const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number } | null>(null);
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -54,10 +55,23 @@ export default function Orders() {
     };
   }, [selected]);
 
+  const handleOpenPopup = (drink: { id: number; name: string; price: number }) => {
+    setSelectedDrink(drink);
+    setShowPopup(true);
+  };
+
+  const handleClosePopup = () => {
+      setShowPopup(false);
+      setSelectedDrink(null);
+    };
+
+
   // Handle drink selection
   const handleDrinkSelect = (drink: { id: number; name: string; price: number }) => {
     console.log("Selected drink:", drink);
     // TODO: display modifications popup
+    setSelectedDrink(drink);
+    setShowPopup(true);
 
     // For now, just add to cart directly
     const existing = cartItems.findIndex((item) => item.name === drink.name);
@@ -73,6 +87,8 @@ export default function Orders() {
         { name: drink.name, price: drink.price, quantity: 1 },
       ]);
     }
+
+    handleClosePopup();
   };
 
   return (
@@ -105,12 +121,20 @@ export default function Orders() {
               key={d.id}
               className="drink-btn"
               title={d.description || d.name}
-              onClick={() => handleDrinkSelect(d)}
+              onClick={() => handleOpenPopup(d)}
             >
               <div className="drink-tile-name">{d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
           ))}
+
+          {showPopup && selectedDrink && (
+          <Popup
+            onClose={handleClosePopup}
+            onAdd={() => handleDrinkSelect(selectedDrink!)}
+            title={selectedDrink.name}
+          />
+        )}
 
           {drinks.length === 0 && (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
