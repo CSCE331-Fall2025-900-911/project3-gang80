@@ -1,9 +1,10 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Cart.css";
 
 export default function Cart() {
   const location = useLocation();
+  const navigate = useNavigate();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [cartItems, setCartItems] = useState<Array<{ name: string; price: number; quantity: number }>>([]);
   useEffect(() => { const items = (location.state as { cartItems: Array<{ name: string; price: number; quantity: number }> })?.cartItems || []; setCartItems(items); }, [location.state]);
@@ -14,32 +15,38 @@ export default function Cart() {
     setCartItems((prevItems) => prevItems.filter((_, i) => i !== index));
   };
 
+  const handleOrder = () => {
+    navigate("/kiosk/order", { state: { orderType: orderType } });
+  };
+
   return (
-    <div style={{ paddingLeft: "250px", height: "100vh" }}>
+    <div className="cart-page">
       <h1>Cart</h1>
       <p>Order type: {orderType}</p>
-      {cartItems.length === 0 ? (
-        <p>Your cart is empty.</p>
-      ) : (
+      {cartItems.length === 0 ? (<p>Your cart is empty.</p>) : (
         <>
-        <ul>
+        <div className="cart-items">
           {cartItems.map((item, index) => (
-            <li key={index}>
-              {item.name} - ${item.price} x {item.quantity}
-              <button 
-                style={{ marginLeft: "10px" }}
-                onClick={() => removeFromCart(index)}
-              >
+            <div key={index} className="cart-item">
+              <span>
+                {item.name} - ${item.price} x {item.quantity}
+              </span>
+              <button onClick={() => removeFromCart(index)} className="remove-btn">
                 Remove
               </button>
-              </li>
+            </div>
           ))}
-        </ul>
-        <h3>Total: ${total.toFixed(2)}</h3>
-        {/* <button onClick={clearCart}>Clear Cart</button> */}
-        <button style={{ marginLeft: "10px" }}>Checkout</button>
+        </div>
+        
         </>
       )}
+        <h3 className="cart-total">Total: ${total.toFixed(2)}</h3>
+        <div className="cart-actions">
+          <button className="back-btn" onClick={handleOrder}>Continue Ordering</button>
+          {/* <button className="checkout-btn" onClick={handleCheckout}>Checkout</button> */}
+          {/* <button className="clear-btn" onClick={handleClear}>Clear Cart</button> */}
+       
+        </div>
     </div>
   );
 }
