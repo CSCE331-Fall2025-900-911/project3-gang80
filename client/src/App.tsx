@@ -6,8 +6,8 @@ import Employees from "./pages/Employees";
 import Analytics from "./pages/Analytics";
 import Kiosk from "./pages/Kiosk";
 import Orders from "./pages/Orders";
+import './App.css'
 import Cart from "./pages/Cart";
-import './app.css'
 
 
 
