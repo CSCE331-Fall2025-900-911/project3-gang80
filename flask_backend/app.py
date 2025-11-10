@@ -7,7 +7,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 
 CORS(app, origins=[
-    "https://project3-gang80-1.onrender.com" #add local host below to test locally
+    "https://project3-gang80-1.onrender.com", "http://127.0.0.1:5000", "http://localhost:5173" #add local host below to test locally
 ])
 
 # Set up DB

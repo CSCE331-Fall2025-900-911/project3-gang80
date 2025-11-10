@@ -24,8 +24,7 @@ export default function Cart() {
       alert("Please select a payment method.");
       return;
     }
-    alert(`Order confirmed! Payment method: ${paymentMethod}`);
-    navigate("/kiosk", {});
+    navigate("/kiosk/confirmation", {});
   };
 
   const handleBack = () => {
