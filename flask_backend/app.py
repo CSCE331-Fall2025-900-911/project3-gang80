@@ -1,9 +1,14 @@
 from flask import Flask
 from db import init_db
 from routes import database
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+
+CORS(app, origins=[
+    "https://project3-gang80-1.onrender.com" #add local host below to test locally
+])
 
 # Set up DB
 init_db(app)
