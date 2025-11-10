@@ -7,6 +7,7 @@ import Analytics from "./pages/Analytics";
 import Kiosk from "./pages/Kiosk";
 import Test from "./pages/Test";
 import Orders from "./pages/Orders";
+import './app.css'
 
 
 
@@ -14,7 +15,7 @@ function App() {
   return (
     <Router>
       <Navbar />
-      <div className="app-container" style={{ marginLeft: "250px", padding: "20px" }}>
+      <div className="app-container" style={{ marginLeft: "250px" }}>
         <Routes>
           <Route path="/" element={<Cashier/>} />
           <Route path="/inventory" element={<Inventory/>} />
