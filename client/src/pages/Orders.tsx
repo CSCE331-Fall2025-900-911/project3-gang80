@@ -1,12 +1,14 @@
 import * as React from "react";
 import Popup from "../components/Popup";
 import { useLocation } from "react-router-dom";
+//import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Orders.css";
 
 export default function Orders() {
-  const location = useLocation();
-  const orderType = (location.state as { orderType: string })?.orderType || "unknown";
+  const API_URL = "https://project3-gang80.onrender.com/"; // switch this to localhost 5000 when testing
+  //const location = useLocation();
+  //const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
 
   const drinkCategories = [
@@ -30,7 +32,7 @@ export default function Orders() {
     async function load() {
       try {
         const resp = await fetch(
-          `/api/db/menu_items_by_category?category=${encodeURIComponent(selected)}`
+          `${API_URL}/api/db/menu_items_by_category?category=${encodeURIComponent(selected)}`
         );
         if (!resp.ok) {
           console.error("Failed to fetch items", resp.status);
