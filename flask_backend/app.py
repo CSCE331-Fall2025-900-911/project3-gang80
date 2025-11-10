@@ -1,9 +1,14 @@
 from flask import Flask
 from db import init_db
 from routes import database
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+
+CORS(app, origins=[
+    "https://project3-gang80-1.onrender.com" #add local host below to test locally
+])
 
 # Set up DB
 init_db(app)
@@ -24,4 +29,6 @@ def test():
 app.register_blueprint(database.bp, url_prefix='/api/db')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
