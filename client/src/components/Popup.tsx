@@ -5,9 +5,10 @@ interface PopupProps {
   onClose: () => void;
   onAdd: () => void;     
   title: string;
+  imgName: string;
 }
 
-function Popup({ onClose, title }: PopupProps) {
+function Popup({ onClose, title, imgName }: PopupProps) {
   return (
     <div className="popup">
       <div className="background">
@@ -22,7 +23,7 @@ function Popup({ onClose, title }: PopupProps) {
           <div className="flex flex-1 flex-col bg-gray-50 rounded p-4 justify-center items-center">
             <h2 className="text-3xl font-medium my-20">{title}</h2>
             <div className="max-w-[200px] max-h-[200px] object-contain">
-                <DrinkImage drink="tao"/>
+                <DrinkImage drink={imgName}/>
             </div>
           </div>
 

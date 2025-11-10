@@ -1,3 +1,4 @@
+// TODO: Import images here
 import taoImg from "../assets/engr_tao_logo.jpg";
 
 const images : Record<string, string> = {

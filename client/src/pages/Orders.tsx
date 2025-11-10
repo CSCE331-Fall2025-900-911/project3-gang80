@@ -27,7 +27,7 @@ export default function Orders() {
   >([]);
 
   const [showPopup, setShowPopup] = React.useState(false);
-  const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number } | null>(null);
+  const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; imgName: string; } | null>(null);
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -73,7 +73,6 @@ export default function Orders() {
     setSelectedDrink(drink);
     setShowPopup(true);
 
-    // For now, just add to cart directly
     const existing = cartItems.findIndex((item) => item.name === drink.name);
     if (existing) {
       setCartItems((prevItems) => {
@@ -133,6 +132,7 @@ export default function Orders() {
             onClose={handleClosePopup}
             onAdd={() => handleDrinkSelect(selectedDrink!)}
             title={selectedDrink.name}
+            imgName={selectedDrink.imgName}
           />
         )}
 
