@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 .kiosk-page {
   width: 100%;
   display: flex;
@@ -28,6 +30,8 @@
   background-color: white;
   padding: 1rem;
   border-radius: 1rem;
+  border: 2px solid black;
+  border: 2px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;

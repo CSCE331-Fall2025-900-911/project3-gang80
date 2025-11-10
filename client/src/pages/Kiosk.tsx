@@ -11,7 +11,7 @@ export default function Kiosk() {
   };
 
   return (
-    <div className="kiosk-page">
+    <div className="kiosk-page bg-gray-200">
       <h1 className="kiosk-title">Dine In or Take Out?</h1>
       <div className="kiosk-buttons">
         <button className="kiosk-button" onClick={() => handleSelect("dine-in")}>
