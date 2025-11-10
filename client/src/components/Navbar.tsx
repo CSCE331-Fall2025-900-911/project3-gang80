@@ -35,11 +35,6 @@ function Navbar() {
             Kiosk
           </NavLink>
         </li>
-        <li>
-          <NavLink to="/test">
-            Test
-          </NavLink>
-        </li>
       </ul>
     </nav>
   );
