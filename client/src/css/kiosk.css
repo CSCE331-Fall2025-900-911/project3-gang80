@@ -1,0 +1,45 @@
+.kiosk-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 100vh;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.kiosk-title {
+  font-size: 3rem;
+  font-weight: bold;
+  font-family: sans-serif;
+  margin: 0 0 2rem 0;
+  margin-bottom: 4rem;
+}
+
+.kiosk-buttons {
+  display: flex;
+  gap: 6rem;
+}
+
+.kiosk-button {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.kiosk-button:hover {
+  transform: scale(1.05);
+}
+
+.kiosk-button img {
+  width: 8rem; /* smaller images */
+  height: 8rem;
+}
