@@ -1,11 +1,11 @@
-//import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Orders.css";
 
 export default function Orders() {
   const API_URL = "https://project3-gang80.onrender.com/"; // switch this to localhost 5000 when testing
-  //const location = useLocation();
-  //const orderType = (location.state as { orderType: string })?.orderType || "unknown";
+  const location = useLocation();
+  const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<Array<{ name: string; price: number; quantity: number }>>([]);
