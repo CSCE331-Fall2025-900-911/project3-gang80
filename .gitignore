@@ -2,6 +2,10 @@ flask_backend/passwd.txt
 /flask_backend/client_secret*
 */__pycache__*
 *.pyc
+.venv/
+venv/
+env/
+.env/
 
 # Leave this in please
 react_frontend
