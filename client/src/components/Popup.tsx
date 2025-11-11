@@ -8,7 +8,7 @@ interface PopupProps {
   imgName: string;
 }
 
-function Popup({ onClose, title, imgName }: PopupProps) {
+function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
 
   return (
     <div className="popup">
@@ -17,7 +17,7 @@ function Popup({ onClose, title, imgName }: PopupProps) {
         <div className="popup-bar">
             <button onClick={onClose} className="popup-button">Close</button>
             <h2 className="text-xl font-semibold">Customization</h2>
-            <button onClick={onClose} className="popup-button">Add</button> 
+            <button onClick={onAdd} className="popup-button">Add</button> 
         </div>
 
         <div className="flex gap-4">

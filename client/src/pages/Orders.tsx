@@ -11,7 +11,12 @@ export default function Orders() {
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<Array<{ name: string; price: number; quantity: number }>>([]);
+  const [cartItems, setCartItems] = useState<
+  Array<{ name: string; price: number; quantity: number }>
+  >(() => {
+    const saved = localStorage.getItem("cartItems");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const drinkCategories = [
     "Milk Tea",
@@ -66,6 +71,9 @@ export default function Orders() {
       setSelectedDrink(null);
     };
 
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   // Handle drink selection
   const handleDrinkSelect = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
@@ -75,7 +83,7 @@ export default function Orders() {
     setShowPopup(true);
 
     const existing = cartItems.findIndex((item) => item.name === drink.name);
-    if (existing) {
+    if (existing !== -1) {
       setCartItems((prevItems) => {
         const newItems = [...prevItems];
         newItems[existing].quantity += 1;
@@ -90,6 +98,23 @@ export default function Orders() {
 
     handleClosePopup();
   };
+  // const addToCart = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
+  //   const existing = cartItems.findIndex((item) => item.name === drink.name);
+  //   if (existing !== -1) {
+  //     setCartItems((prevItems) => {
+  //       const newItems = [...prevItems];
+  //       newItems[existing].quantity += 1;
+  //       return newItems;
+  //     })
+  //   }
+  //     else {
+  //     setCartItems((prevItems) => [
+  //       ...prevItems,
+  //       { name: drink.name, price: drink.price, quantity: 1 },
+  //     ]);
+  //   }
+  //   handleClosePopup();
+  // };
 
   return (
     <div className="orders-layout">
@@ -147,9 +172,8 @@ export default function Orders() {
           <button
             style={{ marginTop: "20px" }}
             onClick={() =>
-              navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems } })}
-              className="view-cart-btn"
-          >
+              navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems} })}
+            className="view-cart-btn">
             Go to Cart ({cartItems.length})
           </button>
         </div>
