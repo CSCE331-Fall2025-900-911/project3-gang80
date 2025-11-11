@@ -1,14 +1,22 @@
+import * as React from "react";
+import Popup from "../components/Popup";
+//import { useLocation } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Orders.css";
 
 export default function Orders() {
-  const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
+  const API_URL = "http://127.0.0.1:5000"; // switch this to localhost 5000 when testing
   const location = useLocation();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<Array<{ name: string; price: number; quantity: number }>>([]);
+  const [cartItems, setCartItems] = useState<
+  Array<{ name: string; price: number; quantity: number }>
+  >(() => {
+    const saved = localStorage.getItem("cartItems");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const drinkCategories = [
     "Milk Tea",
@@ -20,8 +28,11 @@ export default function Orders() {
   ];
 
   const [drinks, setDrinks] = useState<
-    { id: number; name: string; price: number; description: string | null; category: string }[]
+    { id: number; name: string; price: number; description: string | null; category: string; img_name?: string | null }[]
   >([]);
+
+  const [showPopup, setShowPopup] = React.useState(false);
+  const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -37,6 +48,7 @@ export default function Orders() {
           return;
         }
         const data = await resp.json();
+        console.log("Fetched drinks:", data.items);
         if (active) setDrinks(data.items || []);
       } catch (err) {
         console.error("Fetch error", err);
@@ -49,14 +61,29 @@ export default function Orders() {
     };
   }, [selected]);
 
+  const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
+    setSelectedDrink(drink);
+    setShowPopup(true);
+  };
+
+  const handleClosePopup = () => {
+      setShowPopup(false);
+      setSelectedDrink(null);
+    };
+
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
+
   // Handle drink selection
-  const handleDrinkSelect = (drink: { id: number; name: string; price: number }) => {
+  const handleDrinkSelect = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     console.log("Selected drink:", drink);
     // TODO: display modifications popup
+    setSelectedDrink(drink);
+    setShowPopup(true);
 
-    // For now, just add to cart directly
     const existing = cartItems.findIndex((item) => item.name === drink.name);
-    if (existing) {
+    if (existing !== -1) {
       setCartItems((prevItems) => {
         const newItems = [...prevItems];
         newItems[existing].quantity += 1;
@@ -68,7 +95,26 @@ export default function Orders() {
         { name: drink.name, price: drink.price, quantity: 1 },
       ]);
     }
+
+    handleClosePopup();
   };
+  // const addToCart = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
+  //   const existing = cartItems.findIndex((item) => item.name === drink.name);
+  //   if (existing !== -1) {
+  //     setCartItems((prevItems) => {
+  //       const newItems = [...prevItems];
+  //       newItems[existing].quantity += 1;
+  //       return newItems;
+  //     })
+  //   }
+  //     else {
+  //     setCartItems((prevItems) => [
+  //       ...prevItems,
+  //       { name: drink.name, price: drink.price, quantity: 1 },
+  //     ]);
+  //   }
+  //   handleClosePopup();
+  // };
 
   return (
     <div className="orders-layout">
@@ -100,12 +146,21 @@ export default function Orders() {
               key={d.id}
               className="drink-btn"
               title={d.description || d.name}
-              onClick={() => handleDrinkSelect(d)}
+              onClick={() => handleOpenPopup(d)}
             >
               <div className="drink-tile-name">{d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
           ))}
+
+          {showPopup && selectedDrink && (
+          <Popup
+            onClose={handleClosePopup}
+            onAdd={() => handleDrinkSelect(selectedDrink!)}
+            title={selectedDrink.name}
+            imgName={selectedDrink.img_name ?? ""}
+          />
+        )}
 
           {drinks.length === 0 && (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
@@ -117,9 +172,8 @@ export default function Orders() {
           <button
             style={{ marginTop: "20px" }}
             onClick={() =>
-              navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems } })}
-              className="view-cart-btn"
-          >
+              navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems} })}
+            className="view-cart-btn">
             Go to Cart ({cartItems.length})
           </button>
         </div>

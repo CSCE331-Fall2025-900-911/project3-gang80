@@ -3,6 +3,7 @@ from db import db
 import models
 from helpers.permissions import Roles, require_roles
 from sqlalchemy import text
+from datetime import datetime
 
 bp = Blueprint('database', __name__)
 
@@ -40,12 +41,90 @@ def menu_items_by_category():
                 "price": float(m.price),
                 "description": m.description,
                 "category": m.category,
+                "img_name": m.img_name,
             }
             for m in items
         ]
         return jsonify({"items": data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@bp.route('/menu_modifications', methods=['GET'])
+def menu_modifications():
+    """Return modification menu items grouped by category.
+
+    Response format:
+    {
+        "categories": {
+            "Ice Level": [ {id, name, price, description, category, img_name}, ... ],
+            "Toppings": [ ... ],
+            ...
+        }
+    }
+    """
+    try:
+        items = (
+            db.session.query(models.MenuItem)
+            .filter(models.MenuItem.is_modification == True)
+            .order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc())
+            .all()
+        )
+
+        grouped = {}
+        for m in items:
+            cat = m.category or "Uncategorized"
+            grouped.setdefault(cat, []).append({
+                "id": m.id,
+                "name": m.name,
+                "price": float(m.price) if m.price is not None else None,
+                "description": m.description,
+                "category": m.category,
+                "img_name": m.img_name,
+            })
+
+        return jsonify({"categories": grouped}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@bp.route('/orders', methods=['GET'])
+def get_all_orders():
+    """
+    Return all orders from the orders table.
+    Response format:
+    {
+        orders: [
+            {
+                id,
+                customer_id,
+                timestamp,
+                total_price,
+                pearls_earned,
+                employee_id,
+                payment_method
+            },
+            ...
+        ]
+    }
+    """
+    try:
+        orders = db.session.query(models.Order).all()
+        data = [
+            {
+                "id": o.id,
+                "customer_id": o.customer_id,
+                # "timestamp": o.timestamp.isoformat() if o.timestamp else None,
+                "total_price": float(o.total_price) if o.total_price else None,
+                "pearls_earned": o.pearls_earned,
+                "employee_id": o.employee_id,
+                "payment_method": o.payment_method
+            }
+            for o in orders
+        ]
+        return jsonify({"orders": data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 ORG_ID = "1090847452683-mc60dh5mdhlj90i1qathlqovdc3bhj2d.apps.googleusercontent.com"
 
@@ -73,3 +152,40 @@ def add_user():
     db.session.add(user)
     db.session.commit()
     return jsonify({"user_id": user.id, "message": "User added"})
+
+@bp.route('/orders/create', methods=['POST', 'OPTIONS'])
+def create_order():
+    # Handle CORS preflight requests
+    if request.method == "OPTIONS":
+        return '', 200
+
+    data = request.get_json()
+    try:
+        new_order = models.Order(
+            customer_id=data.get('customer_id'),
+            total_price=data['total_price'],
+            pearls_earned=data['pearls_earned'],
+            employee_id=data.get('employee_id'),
+            payment_method=data['payment_method'],
+            timestamp=datetime.utcnow(),  # ✅ timestamp from backend
+        )
+
+        for item in data['items']:
+            order_item = models.OrderItem(
+                menu_item_id=item['menu_item_id'],
+                quantity=item['quantity'],
+            )
+            new_order.items.append(order_item)
+
+        db.session.add(new_order)
+        db.session.commit()
+
+        return jsonify({
+            "order_id": new_order.id,
+            "timestamp": new_order.timestamp.isoformat(),
+            "message": "Order created successfully"
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
