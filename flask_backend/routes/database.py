@@ -112,3 +112,27 @@ def add_user():
     db.session.add(user)
     db.session.commit()
     return jsonify({"user_id": user.id, "message": "User added"})
+
+@bp.route('/orders/create', methods=['POST', 'OPTIONS'])
+def create_order():
+    data = request.get_json()
+    try:
+        new_order = models.Order(
+            customer_id=data['customer_id'],
+            total_price=data['total_price'],
+            pearls_earned=data['pearls_earned'],
+            employee_id=data.get('employee_id'),
+            payment_method=data['payment_method']
+        )
+        for item in data['items']:
+            order_item = models.OrderItem(
+                menu_item_id=item['menu_item_id'],
+                quantity=item['quantity'],
+            )
+            new_order.items.append(order_item)
+        db.session.add(new_order)
+        db.session.commit()
+        return jsonify({"order_id": new_order.id, "message": "Order created"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500

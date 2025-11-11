@@ -4,12 +4,12 @@ import "../css/Checkout.css";
 
 export default function Cart() {
     // const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
-  const API_URL = "http://localhost:5000";
+  const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [cartItems, setCartItems] = useState<Array<{ name: string; price: number; quantity: number }>>([]);
-  useEffect(() => { const items = (location.state as { cartItems: Array<{ name: string; price: number; quantity: number }> })?.cartItems || []; setCartItems(items); }, [location.state]);
+  useEffect(() => { const items = (location.state as { cartItems: Array<{ name: string; price: number; quantity: number}> })?.cartItems || []; setCartItems(items); }, [location.state]);
 
   const [paymentMethod, setPaymentMethod] = useState<string>("");
 
@@ -27,10 +27,15 @@ const handleConfirmOrder = async () => {
       return;
     }
     const orderData = {
-      orderType: orderType,
-      items: cartItems,
-      paymentMethod: paymentMethod,
-      totalAmount: total,
+      customer_id: null, // assuming guest checkout
+      total_price: total,
+      pearls_earned: Math.floor(total / 10), // example calculation
+      payment_method: paymentMethod,
+      items: cartItems.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+      })),
+      order_type: orderType,
     };
     // Here you would typically send orderData to the backend API
     try {
