@@ -9,7 +9,24 @@ export default function Cart() {
   const navigate = useNavigate();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [cartItems, setCartItems] = useState<Array<{ name: string; price: number; quantity: number }>>([]);
-  useEffect(() => { const items = (location.state as { cartItems: Array<{ name: string; price: number; quantity: number }> })?.cartItems || []; setCartItems(items); }, [location.state]);
+
+  useEffect(() => {
+    const stateCart = (location.state as { cartItems: Array<{ name: string; price: number; quantity: number }> })?.cartItems;
+    if (stateCart && stateCart.length > 0) {
+      setCartItems(stateCart);
+      localStorage.setItem("cartItems", JSON.stringify(stateCart));
+    }
+    else {
+      const saved = localStorage.getItem("cartItems");
+      if (saved) {
+        setCartItems(JSON.parse(saved));
+      }
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
