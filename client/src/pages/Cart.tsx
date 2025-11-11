@@ -39,7 +39,7 @@ export default function Cart() {
   };
 
   const handleCheckout = () => {
-    navigate("/kiosk/checkout", { state: { orderType: orderType } });
+    navigate("/kiosk/checkout", { state: { orderType: orderType, cartItems: cartItems } });
   };
 
   return (
