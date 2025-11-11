@@ -50,7 +50,6 @@ export default function Cart() {
         <div className="cart-actions">
           <button className="back-btn" onClick={handleOrder}>Continue Ordering</button>
           <button className="checkout-btn" onClick={handleCheckout}>Checkout</button>
-          {/* <button className="clear-btn" onClick={handleClear}>Clear Cart</button> */}
        
         </div>
     </div>
