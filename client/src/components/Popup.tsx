@@ -45,17 +45,29 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
       .finally(() => setLoading(false));
   }, []);
 
-  const categorize = (cat?: string) => {
-    if (!cat) return 'other';
-    const lower = cat.toLowerCase();
-    if (lower.includes('ice')) return 'ice';
-    if (lower.includes('sweet')) return 'sweetness';
-    if (lower.includes('top')) return 'toppings';
-    return 'other';
-  };
 
   const handleSelect = (item: ModificationItem) => {
-    const kind = categorize(item.category || item.img_name || item.name);
+    // Use the same categorize logic from inside the render
+    const nameVal = item.name?.toLowerCase() || '';
+    const catVal = (item.category || '')?.toLowerCase() || '';
+    
+    let kind: 'ice' | 'sweetness' | 'toppings' | 'other';
+    if (nameVal.includes('ice') && !nameVal.includes('ice cream')) kind = 'ice';
+    else if (nameVal.includes('sweetness') || nameVal.includes('sweet') || nameVal.includes('no sugar') || nameVal.includes('sugar')) kind = 'sweetness';
+    else if (
+      nameVal.includes('topping') ||
+      nameVal.includes('boba') ||
+      nameVal.includes('jelly') ||
+      nameVal.includes('pudding') ||
+      nameVal.includes('crema') ||
+      nameVal.includes('cream') ||
+      nameVal.includes('ice cream')
+    ) kind = 'toppings';
+    else if (catVal.includes('ice')) kind = 'ice';
+    else if (catVal.includes('sweetness') || catVal.includes('sweet')) kind = 'sweetness';
+    else if (catVal.includes('topping') || catVal.includes('boba') || catVal.includes('jelly') || catVal.includes('pudding')) kind = 'toppings';
+    else kind = 'other';
+
     if (kind === 'ice') {
       setSelectedIce((prev) => (prev === item.id ? null : item.id));
     } else if (kind === 'sweetness') {
