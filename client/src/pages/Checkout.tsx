@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import "../css/Checkout.css";
 
 export default function Cart() {
-  // const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
-  const API_URL = "http://localhost:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
@@ -21,41 +19,13 @@ export default function Cart() {
     setPaymentMethod(e.target.value);
   };
 
-  const handleConfirmOrder = async () => {
+  const handleConfirmOrder = () => {
     if (!paymentMethod) {
       alert("Please select a payment method.");
       return;
     }
-    const orderData = {
-      orderType: orderType,
-      items: cartItems,
-      paymentMethod: paymentMethod,
-      totalAmount: total,
-    };
-    // Here you would typically send orderData to the backend API
-    try {
-      const resp = await fetch(`${API_URL}/api/orders/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      });
-      if (!resp.ok) {
-        console.error("Failed to create order", resp.status);
-        alert("There was an error processing your order. Please try again.");
-        return;
-      }
-      const data = await resp.json();
-      console.log("Order confirmed!", {state: {orderData}});
-      alert(`Order confirmed! Payment method: ${paymentMethod}`);
-      navigate("/kiosk", {});
-    } catch (err) {
-      console.error("Fetch error", err);
-      alert("There was an error processing your order. Please try again.");
-      return;
-    }
-    
+    alert(`Order confirmed! Payment method: ${paymentMethod}`);
+    navigate("/kiosk", {});
   };
 
   const handleBack = () => {
