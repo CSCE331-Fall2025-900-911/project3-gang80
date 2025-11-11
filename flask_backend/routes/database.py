@@ -3,6 +3,7 @@ from db import db
 import models
 from helpers.permissions import Roles, require_roles
 from sqlalchemy import text
+from datetime import datetime
 
 bp = Blueprint('database', __name__)
 
@@ -73,7 +74,7 @@ def get_all_orders():
             {
                 "id": o.id,
                 "customer_id": o.customer_id,
-                "timestamp": o.timestamp.isoformat() if o.timestamp else None,
+                # "timestamp": o.timestamp.isoformat() if o.timestamp else None,
                 "total_price": float(o.total_price) if o.total_price else None,
                 "pearls_earned": o.pearls_earned,
                 "employee_id": o.employee_id,
@@ -115,24 +116,37 @@ def add_user():
 
 @bp.route('/orders/create', methods=['POST', 'OPTIONS'])
 def create_order():
+    # Handle CORS preflight requests
+    if request.method == "OPTIONS":
+        return '', 200
+
     data = request.get_json()
     try:
         new_order = models.Order(
-            customer_id=data['customer_id'],
+            customer_id=data.get('customer_id'),
             total_price=data['total_price'],
             pearls_earned=data['pearls_earned'],
             employee_id=data.get('employee_id'),
-            payment_method=data['payment_method']
+            payment_method=data['payment_method'],
+            timestamp=datetime.utcnow(),  # ✅ timestamp from backend
         )
+
         for item in data['items']:
             order_item = models.OrderItem(
                 menu_item_id=item['menu_item_id'],
                 quantity=item['quantity'],
             )
             new_order.items.append(order_item)
+
         db.session.add(new_order)
         db.session.commit()
-        return jsonify({"order_id": new_order.id, "message": "Order created"}), 201
+
+        return jsonify({
+            "order_id": new_order.id,
+            "timestamp": new_order.timestamp.isoformat(),
+            "message": "Order created successfully"
+        }), 201
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
