@@ -47,7 +47,7 @@ function DrinkImage({ drink }: { drink: string }) {
   console.log("imgName passed to Popup:", drink);
   console.log("images keys:", Object.keys(images));
   console.log("resolved src:", images[drink]);
-  return <img src={images[drink]} alt={drink} className="w-48 h-48"/>;
+  return <img src={images[drink]} alt={drink} className="w-48"/>;
 }
 
 export default DrinkImage;
