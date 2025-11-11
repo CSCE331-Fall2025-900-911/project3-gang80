@@ -1,3 +1,6 @@
+import * as React from "react";
+import Popup from "../components/Popup";
+//import { useLocation } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Orders.css";
@@ -20,8 +23,11 @@ export default function Orders() {
   ];
 
   const [drinks, setDrinks] = useState<
-    { id: number; name: string; price: number; description: string | null; category: string }[]
+    { id: number; name: string; price: number; description: string | null; category: string; img_name?: string | null }[]
   >([]);
+
+  const [showPopup, setShowPopup] = React.useState(false);
+  const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -37,6 +43,7 @@ export default function Orders() {
           return;
         }
         const data = await resp.json();
+        console.log("Fetched drinks:", data.items);
         if (active) setDrinks(data.items || []);
       } catch (err) {
         console.error("Fetch error", err);
@@ -49,12 +56,24 @@ export default function Orders() {
     };
   }, [selected]);
 
+  const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
+    setSelectedDrink(drink);
+    setShowPopup(true);
+  };
+
+  const handleClosePopup = () => {
+      setShowPopup(false);
+      setSelectedDrink(null);
+    };
+
+
   // Handle drink selection
-  const handleDrinkSelect = (drink: { id: number; name: string; price: number }) => {
+  const handleDrinkSelect = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     console.log("Selected drink:", drink);
     // TODO: display modifications popup
+    setSelectedDrink(drink);
+    setShowPopup(true);
 
-    // For now, just add to cart directly
     const existing = cartItems.findIndex((item) => item.name === drink.name);
     if (existing) {
       setCartItems((prevItems) => {
@@ -68,6 +87,8 @@ export default function Orders() {
         { name: drink.name, price: drink.price, quantity: 1 },
       ]);
     }
+
+    handleClosePopup();
   };
 
   return (
@@ -100,12 +121,21 @@ export default function Orders() {
               key={d.id}
               className="drink-btn"
               title={d.description || d.name}
-              onClick={() => handleDrinkSelect(d)}
+              onClick={() => handleOpenPopup(d)}
             >
               <div className="drink-tile-name">{d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
           ))}
+
+          {showPopup && selectedDrink && (
+          <Popup
+            onClose={handleClosePopup}
+            onAdd={() => handleDrinkSelect(selectedDrink!)}
+            title={selectedDrink.name}
+            imgName={selectedDrink.img_name ?? ""}
+          />
+        )}
 
           {drinks.length === 0 && (
             <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>

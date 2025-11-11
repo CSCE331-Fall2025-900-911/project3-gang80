@@ -16,7 +16,8 @@ name VARCHAR(64) NOT NULL,
 price NUMERIC(10,2) NOT NULL,
 description VARCHAR(255),
 is_modification bool NOT NULL,
-category VARCHAR(64)
+category VARCHAR(64),
+img_name VARCHAR(255)
 );
 
 CREATE TABLE inventory (

@@ -23,6 +23,7 @@ class MenuItem(db.Model):
     description = db.Column(db.String(255))
     is_modification = db.Column(db.Boolean, nullable=False)
     category = db.Column(db.String(64))
+    img_name = db.Column(db.String(255))
 
 class Inventory(db.Model):
     __tablename__ = 'inventory'
