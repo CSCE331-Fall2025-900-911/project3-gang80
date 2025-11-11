@@ -101,9 +101,9 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
       <div className="background">
 
         <div className="popup-bar">
-          <button onClick={onClose} className="popup-button">Close</button>
-          <h2 className="text-xl font-semibold">Customization</h2>
-          <button onClick={handleAdd} className="popup-button">Add</button>
+            <button onClick={onClose} className="popup-button">Close</button>
+            <h2 className="text-xl font-semibold">Customization</h2>
+            <button onClick={onAdd} className="popup-button">Add</button> 
         </div>
 
         <div className="flex gap-4">
