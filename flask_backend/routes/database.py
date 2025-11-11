@@ -49,6 +49,44 @@ def menu_items_by_category():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+
+@bp.route('/menu_modifications', methods=['GET'])
+def menu_modifications():
+    """Return modification menu items grouped by category.
+
+    Response format:
+    {
+        "categories": {
+            "Ice Level": [ {id, name, price, description, category, img_name}, ... ],
+            "Toppings": [ ... ],
+            ...
+        }
+    }
+    """
+    try:
+        items = (
+            db.session.query(models.MenuItem)
+            .filter(models.MenuItem.is_modification == True)
+            .order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc())
+            .all()
+        )
+
+        grouped = {}
+        for m in items:
+            cat = m.category or "Uncategorized"
+            grouped.setdefault(cat, []).append({
+                "id": m.id,
+                "name": m.name,
+                "price": float(m.price) if m.price is not None else None,
+                "description": m.description,
+                "category": m.category,
+                "img_name": m.img_name,
+            })
+
+        return jsonify({"categories": grouped}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @bp.route('/orders', methods=['GET'])
 def get_all_orders():
     """
