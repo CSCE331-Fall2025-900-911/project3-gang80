@@ -6,10 +6,10 @@ import Employees from "./pages/Employees";
 import Analytics from "./pages/Analytics";
 import Kiosk from "./pages/Kiosk";
 import Orders from "./pages/Orders";
-import './App.css'
 import Cart from "./pages/Cart";
-
-
+import Checkout from "./pages/Checkout";
+import Confirmation from "./pages/Confirmation";
+import './App.css'
 
 function App() {
   return (
@@ -24,6 +24,8 @@ function App() {
           <Route path="/kiosk" element={<Kiosk/>} />
           <Route path="/kiosk/order" element={<Orders />} />
           <Route path="/kiosk/cart" element={<Cart />} />
+          <Route path="/kiosk/checkout" element={<Checkout />} />
+          <Route path="/kiosk/confirmation" element={<Confirmation />} />
         </Routes>
       </div>
     </Router>

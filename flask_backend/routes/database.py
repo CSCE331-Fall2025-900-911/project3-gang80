@@ -47,6 +47,45 @@ def menu_items_by_category():
         return jsonify({"items": data}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@bp.route('/orders', methods=['GET'])
+def get_all_orders():
+    """
+    Return all orders from the orders table.
+    Response format:
+    {
+        orders: [
+            {
+                id,
+                customer_id,
+                timestamp,
+                total_price,
+                pearls_earned,
+                employee_id,
+                payment_method
+            },
+            ...
+        ]
+    }
+    """
+    try:
+        orders = db.session.query(models.Order).all()
+        data = [
+            {
+                "id": o.id,
+                "customer_id": o.customer_id,
+                "timestamp": o.timestamp.isoformat() if o.timestamp else None,
+                "total_price": float(o.total_price) if o.total_price else None,
+                "pearls_earned": o.pearls_earned,
+                "employee_id": o.employee_id,
+                "payment_method": o.payment_method
+            }
+            for o in orders
+        ]
+        return jsonify({"orders": data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 ORG_ID = "1090847452683-mc60dh5mdhlj90i1qathlqovdc3bhj2d.apps.googleusercontent.com"
 
