@@ -1,4 +1,4 @@
-import "./popup.css";
+import "./Popup.css";
 import DrinkImage from "./DrinkImage";
 import { useEffect, useState } from "react";
 
