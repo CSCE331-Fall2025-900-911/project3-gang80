@@ -9,6 +9,7 @@ interface PopupProps {
 }
 
 function Popup({ onClose, title, imgName }: PopupProps) {
+
   return (
     <div className="popup">
       <div className="background">

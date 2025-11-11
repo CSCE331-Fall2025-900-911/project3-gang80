@@ -23,11 +23,11 @@ export default function Orders() {
   ];
 
   const [drinks, setDrinks] = useState<
-    { id: number; name: string; price: number; description: string | null; category: string }[]
+    { id: number; name: string; price: number; description: string | null; category: string; img_name?: string | null }[]
   >([]);
 
   const [showPopup, setShowPopup] = React.useState(false);
-  const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; imgName: string; } | null>(null);
+  const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -43,6 +43,7 @@ export default function Orders() {
           return;
         }
         const data = await resp.json();
+        console.log("Fetched drinks:", data.items);
         if (active) setDrinks(data.items || []);
       } catch (err) {
         console.error("Fetch error", err);
@@ -55,7 +56,7 @@ export default function Orders() {
     };
   }, [selected]);
 
-  const handleOpenPopup = (drink: { id: number; name: string; price: number }) => {
+  const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     setSelectedDrink(drink);
     setShowPopup(true);
   };
@@ -67,7 +68,7 @@ export default function Orders() {
 
 
   // Handle drink selection
-  const handleDrinkSelect = (drink: { id: number; name: string; price: number }) => {
+  const handleDrinkSelect = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     console.log("Selected drink:", drink);
     // TODO: display modifications popup
     setSelectedDrink(drink);
@@ -132,7 +133,7 @@ export default function Orders() {
             onClose={handleClosePopup}
             onAdd={() => handleDrinkSelect(selectedDrink!)}
             title={selectedDrink.name}
-            imgName={selectedDrink.imgName}
+            imgName={selectedDrink.img_name ?? ""}
           />
         )}
 

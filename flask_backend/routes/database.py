@@ -40,6 +40,7 @@ def menu_items_by_category():
                 "price": float(m.price),
                 "description": m.description,
                 "category": m.category,
+                "img_name": m.img_name,
             }
             for m in items
         ]
