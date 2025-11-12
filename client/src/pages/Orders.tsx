@@ -4,6 +4,9 @@ import Popup from "../components/Popup";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Orders.css";
+import languageIcon from '../assets/language.png';
+import magnifyIcon from '../assets/magnify.png';
+import contrastIcon from '../assets/contrast.png';
 
 export default function Orders() {
   const API_URL = "http://127.0.0.1:5000"; // switch this to localhost 5000 when testing
@@ -133,12 +136,12 @@ export default function Orders() {
         </div>
 
         {/* For later sprint */}
-        {/* Accessibility Buttons
+        {/* Accessibility Buttons */}
         <div className="accessibility-buttons">
-          <button className="circle-btn" aria-label="Accessibility option 1"></button>
-          <button className="circle-btn" aria-label="Accessibility option 2"></button>
-        </div> */}
-
+          <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
+          <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
+          <button className="circle-btn" aria-label="Accessibility option 2"><img src={contrastIcon}></img></button>
+        </div>
         {/* Drink Grid */}
         <div className="grid-container">
           {drinks.map((d) => (
