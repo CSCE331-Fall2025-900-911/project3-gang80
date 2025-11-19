@@ -9,3 +9,4 @@ env/
 
 # Leave this in please
 react_frontend
+node_modules

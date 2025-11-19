@@ -10,10 +10,12 @@ from google.auth.transport import requests
 ORG_ID = "1090847452683-mc60dh5mdhlj90i1qathlqovdc3bhj2d.apps.googleusercontent.com"
 
 class Roles(Enum):
-    CUSTOMER = 0
-    EMPLOYEE = 1
-    MANAGER = 2
-    SUPERUSER = 3
+    UNVERIFIED = 0
+    CUSTOMER = 1
+    KIOSK = 2
+    EMPLOYEE = 3
+    MANAGER = 4
+    SUPERUSER = 5
 
 
 def require_roles(*roles_permitted):
