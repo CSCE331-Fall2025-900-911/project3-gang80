@@ -49,8 +49,9 @@ class Order(db.Model):
 
 class JointOrderItem(db.Model):
     __tablename__ = 'joint_order_items'
-    order_id = db.Column(db.Integer, primary_key=True)
-    menu_item_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
+    menu_item_id = db.Column(db.Integer, db.ForeignKey('menu_items.id'), nullable=False)
 
 class JointRecipeIngredient(db.Model):
     __tablename__ = 'joint_recipe_ingredients'

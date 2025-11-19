@@ -15,7 +15,7 @@ export default function Orders() {
   const [selected, setSelected] = useState<string>("Milk Tea");
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<
-  Array<{ name: string; price: number; quantity: number }>
+  Array<{ id:number; name: string; price: number; quantity: number }>
   >(() => {
     const saved = localStorage.getItem("cartItems");
     return saved ? JSON.parse(saved) : [];
@@ -82,10 +82,10 @@ export default function Orders() {
   const handleDrinkSelect = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     console.log("Selected drink:", drink);
     // TODO: display modifications popup
-    setSelectedDrink(drink);
-    setShowPopup(true);
+    // setSelectedDrink(drink);
+    // setShowPopup(true);
 
-    const existing = cartItems.findIndex((item) => item.name === drink.name);
+    const existing = cartItems.findIndex((item) => item.id === drink.id);
     if (existing !== -1) {
       setCartItems((prevItems) => {
         const newItems = [...prevItems];
@@ -95,7 +95,7 @@ export default function Orders() {
     } else {
       setCartItems((prevItems) => [
         ...prevItems,
-        { name: drink.name, price: drink.price, quantity: 1 },
+        { id: drink.id, name: drink.name, price: drink.price, quantity: 1 },
       ]);
     }
 
