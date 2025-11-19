@@ -8,6 +8,7 @@ app = Flask(__name__)
 
 CORS(app, origins=[
     "https://project3-gang80-1.onrender.com" #add local host below to test locally
+    ,"http://localhost:5173","http://127.0.0.1:5173"
 ])
 
 # Set up DB

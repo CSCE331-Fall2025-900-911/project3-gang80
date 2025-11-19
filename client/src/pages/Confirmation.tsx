@@ -14,7 +14,8 @@ interface Order {
 export default function Confirmation() {
     const navigate = useNavigate();
     const [latestOrderNumber, setLatestOrderNumber] = useState<number | null>(null);
-    const API_URL = "http://127.0.0.1:5000"; // change to deployed URL in production
+    // const API_URL = "https://project3-gang80.onrender.com"; // change to deployed URL in production
+    const API_URL = "http://127.0.0.1:5000";
 
     useEffect(() => {
     async function fetchOrders() {

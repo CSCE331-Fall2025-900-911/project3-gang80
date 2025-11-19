@@ -1,4 +1,4 @@
-import "./popup.css";
+import "./Popup.css";
 import DrinkImage from "./DrinkImage";
 import { useEffect, useState } from "react";
 
@@ -80,21 +80,21 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
     }
   };
 
-  const handleAdd = () => {
-    // Build a summary of selections
-    const toppings = Object.entries(selectedToppings)
-      .filter(([_, v]) => v)
-      .map(([k]) => Number(k));
+  // const handleAdd = () => {
+  //   // Build a summary of selections
+  //   const toppings = Object.entries(selectedToppings)
+  //     .filter(([_, v]) => v)
+  //     .map(([k]) => Number(k));
 
-    const summary = {
-      ice_level_id: selectedIce,
-      sweetness_level_id: selectedSweetness,
-      topping_ids: toppings,
-    };
-    console.log('Adding with selections', summary);
-    // keep existing signature: call onAdd without args
-    onAdd();
-  };
+  //   const summary = {
+  //     ice_level_id: selectedIce,
+  //     sweetness_level_id: selectedSweetness,
+  //     topping_ids: toppings,
+  //   };
+  //   console.log('Adding with selections', summary);
+  //   // keep existing signature: call onAdd without args
+  //   onAdd();
+  // };
 
   return (
     <div className="popup">
