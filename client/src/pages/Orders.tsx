@@ -7,9 +7,9 @@ import "../css/Orders.css";
 import languageIcon from '../assets/language.png';
 import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
+import { API_URL } from "../globals";
 
 export default function Orders() {
-  const API_URL = "http://127.0.0.1:5000"; // switch this to localhost 5000 when testing
   const location = useLocation();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");

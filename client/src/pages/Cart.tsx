@@ -1,10 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Cart.css";
+//import { API_URL } from "../globals";
 
 export default function Cart() {
   // const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
-  const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
