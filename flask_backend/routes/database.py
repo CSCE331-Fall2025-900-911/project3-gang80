@@ -4,6 +4,7 @@ import models
 from helpers.permissions import Roles, require_roles
 from sqlalchemy import text
 from datetime import datetime
+from globals import ORG_ID, SUPERUSER_EMAILS
 
 bp = Blueprint('database', __name__)
 
@@ -126,8 +127,6 @@ def get_all_orders():
         return jsonify({"error": str(e)}), 500
 
 
-ORG_ID = "1090847452683-mc60dh5mdhlj90i1qathlqovdc3bhj2d.apps.googleusercontent.com"
-
 @bp.route('/add_user', methods=['POST'])
 def add_user():
     auth = request.headers.get("Authorization")
@@ -147,8 +146,10 @@ def add_user():
     user = db.session.query(models.User).filter(models.User.uid == uid).first()
     if user:
         return jsonify({"user_id": user.id, "message": "User already exists"})
+    
+    userRole = Roles.SUPERUSER if (idinfo.get("email") in SUPERUSER_EMAILS) else Roles.CUSTOMER
 
-    user = models.User(uid=uid, role=Roles.CUSTOMER, name=idinfo.get("name"), email=idinfo.get("email"))
+    user = models.User(uid=uid, role=userRole, name=idinfo.get("name"), email=idinfo.get("email"))
     db.session.add(user)
     db.session.commit()
     return jsonify({"user_id": user.id, "message": "User added"})
