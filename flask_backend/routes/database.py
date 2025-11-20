@@ -4,6 +4,11 @@ import models
 from helpers.permissions import Roles, require_roles
 from sqlalchemy import text
 from datetime import datetime
+from globals import ORG_ID, SUPERUSER_EMAILS
+from flask_cors import cross_origin
+from google.oauth2 import id_token
+from google.auth.transport import requests
+
 
 bp = Blueprint('database', __name__)
 
@@ -126,10 +131,12 @@ def get_all_orders():
         return jsonify({"error": str(e)}), 500
 
 
-ORG_ID = "1090847452683-mc60dh5mdhlj90i1qathlqovdc3bhj2d.apps.googleusercontent.com"
-
-@bp.route('/add_user', methods=['POST'])
+@bp.route('/login', methods=['POST', 'OPTIONS'])
+#@cross_origin(origins=["http://localhost:5173", "https://project3-gang80-1.onrender.com"], supports_credentials=True)
 def add_user():
+    if request.method == "OPTIONS":
+        return '', 200
+    
     auth = request.headers.get("Authorization")
     if not auth or not auth.startswith("Bearer "):
         return jsonify({"error": "Missing Authorization header"}), 401
@@ -146,12 +153,14 @@ def add_user():
 
     user = db.session.query(models.User).filter(models.User.uid == uid).first()
     if user:
-        return jsonify({"user_id": user.id, "message": "User already exists"})
+        return jsonify({"user_id": user.id, "user_role":user.role, "message": "User already exists"})
+    
+    userRole = Roles.SUPERUSER if (idinfo.get("email") in SUPERUSER_EMAILS) else Roles.CUSTOMER
 
-    user = models.User(uid=uid, role=Roles.CUSTOMER, name=idinfo.get("name"), email=idinfo.get("email"))
+    user = models.User(uid=uid, role=userRole.value, name=idinfo.get("name"), email=idinfo.get("email"))
     db.session.add(user)
     db.session.commit()
-    return jsonify({"user_id": user.id, "message": "User added"})
+    return jsonify({"user_id": user.id, "user_role":user.role, "message": "User added"})
 
 @bp.route('/orders/create', methods=['POST', 'OPTIONS'])
 def create_order():

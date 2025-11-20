@@ -1,5 +1,6 @@
 flask_backend/passwd.txt
 /flask_backend/client_secret*
+flask_backend/superuser_emails.txt
 */__pycache__*
 *.pyc
 .venv/
