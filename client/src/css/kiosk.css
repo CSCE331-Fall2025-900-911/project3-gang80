@@ -47,3 +47,14 @@
   width: 8rem; 
   height: 8rem;
 }
+
+.kiosk-logo {
+  width: 300px;
+  height: auto;
+}
+
+.kiosk-logo-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}

@@ -103,19 +103,19 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
         <div className="popup-bar">
             <button onClick={onClose} className="popup-button">Close</button>
             <h2 className="text-xl font-semibold">Customization</h2>
-            <button onClick={onAdd} className="popup-button">Add</button> 
+            <button onClick={onAdd} className="popup-button-1">Add</button> 
         </div>
 
         <div className="flex gap-4">
-          <div className="flex flex-1 flex-col bg-gray-50 rounded p-4 justify-center items-center">
-            <h2 className="text-3xl font-bold my-10">{title}</h2>
+          <div className="flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
+            <h2 className="text-3xl font-bold my-4">{title}</h2>
             <div className="max-w-[200px] object-contain">
               <DrinkImage drink={imgName} />
             </div>
           </div>
 
-          <div className="flex flex-1 bg-gray-50 rounded p-4 justify-center">
-            <div className="w-full">
+          <div className="flex flex-1 bg-gray-50 rounded p-4 min-w-0">
+            <div className="min-w-0 w-fit">
               {loading && <p className="text-center">Loading options...</p>}
               {error && <p className="text-red-600 text-center">Error loading options: {error}</p>}
 
@@ -175,23 +175,23 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
 
                     // Prepare slices to match requested visual counts
                     const iceSlice = iceItems.slice(0, 4);
-                    const sweetSlice = sweetItems.slice(0, 2);
+                    const sweetSlice = sweetItems.slice(0, 4);
                     const toppingSlice = toppingItems.slice(0, 10);
 
                     return (
                       <div>
                         {/* Three columns: Sweetness | Ice | Toppings */}
-                        <div className="grid grid-cols-3 gap-4 mb-6">
-                          <div className="col-span-1 bg-white rounded p-3">
+                        <div className="grid grid-cols-3 gap-4 mb-2">
+                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Sweetness Level</h2>
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap gap-3 justify-center">
                               {sweetSlice.map((it) => {
                                 const selected = selectedSweetness === it.id;
                                 return (
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`px-4 py-2 border rounded transition ${selected ? 'bg-blue-600 text-white border-blue-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -200,16 +200,16 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3">
+                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Ice Level</h2>
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap gap-3 justify-center">
                               {iceSlice.map((it) => {
                                 const selected = selectedIce === it.id;
                                 return (
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`px-4 py-2 border rounded transition ${selected ? 'bg-blue-600 text-white border-blue-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -218,16 +218,16 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3">
+                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Toppings</h2>
-                            <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap gap-3 justify-center">
                               {toppingSlice.map((it) => {
                                 const selected = !!selectedToppings[it.id];
                                 return (
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`px-4 py-2 border rounded transition ${selected ? 'bg-blue-600 text-white border-blue-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
