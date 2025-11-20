@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_URL } from "../globals";
+import { makeApiCall } from "../globals";
 
 function LoginButton() {
   const [initialized, setInitialized] = useState(false);
@@ -13,28 +13,12 @@ function LoginButton() {
     localStorage.setItem("id_token", idToken);
 
     // Call backend /ali/db/login route using Bearer auth header from localStorage
-    try {
-      const storedToken = localStorage.getItem("id_token");
-      const resp = await fetch(`${API_URL}/api/db/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": storedToken ? `Bearer ${storedToken}` : "",
-        },
-        // Optionally, you can send an empty body or user info if needed
-        body: JSON.stringify({}),
-      });
-      if (!resp.ok) {
-        console.error("Login failed:", resp.status);
-      } else {
-        const data = await resp.json();
-        console.log("Backend login response:", data);
-        // Optionally, handle login success (e.g., set user state, redirect)
-      }
-    } catch (err) {
-      console.error("Error calling backend login:", err);
-    }
+    response = await makeApiCall("/api/db/login", "POST", {});
+    if (response && response.user_role) {
+      localStorage.setItem("user_role", response.user_role);
+      console.log("User role set to:", response.user_role);
   }
+}
 
   function handleClick() {
     if (!window.google) {
