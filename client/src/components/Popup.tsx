@@ -25,6 +25,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   const [selectedIce, setSelectedIce] = useState<number | null>(null);
   const [selectedSweetness, setSelectedSweetness] = useState<number | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<Record<number, boolean>>({});
+  const [validationMsg, setValidationMsg] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch modification items grouped by category from backend
@@ -70,8 +71,10 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
 
     if (kind === 'ice') {
       setSelectedIce((prev) => (prev === item.id ? null : item.id));
+      setValidationMsg(null);
     } else if (kind === 'sweetness') {
       setSelectedSweetness((prev) => (prev === item.id ? null : item.id));
+      setValidationMsg(null);
     } else if (kind === 'toppings') {
       setSelectedToppings((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
     } else {
@@ -96,6 +99,17 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   //   onAdd();
   // };
 
+  const handleAdd = () => {
+    if (!selectedIce || !selectedSweetness) {
+      setValidationMsg("Please select both Sweetness Level and Ice Level.");
+      return;
+    }
+    setValidationMsg(null);
+    onAdd();
+  };
+
+  const selectionsComplete = !!selectedIce && !!selectedSweetness;
+
   return (
     <div className="popup">
       <div className="background">
@@ -103,8 +117,19 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
         <div className="popup-bar">
             <button onClick={onClose} className="popup-button">Close</button>
             <h2 className="text-xl font-semibold">Customization</h2>
-            <button onClick={onAdd} className="popup-button-1">Add</button> 
+            <button
+              onClick={handleAdd}
+              className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
+            >
+              Add
+            </button> 
         </div>
+
+        {validationMsg && (
+          <div className="mt-2 text-center text-red-600 font-semibold">
+            {validationMsg}
+          </div>
+        )}
 
         <div className="flex gap-4">
           <div className="flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
