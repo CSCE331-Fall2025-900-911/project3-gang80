@@ -23,6 +23,9 @@ def require_roles(*roles_permitted):
         @wraps(f)
         def wrapper(*args, **kwargs): # 401 = Failed Authentication, 403 = Failed Authorization
 
+            if Roles.UNVERIFIED in roles_permitted:
+                return f(*args, **kwargs)
+
             # Extract Token from Header
             auth = request.headers.get("Authorization")
             if not auth or not auth.startswith("Bearer "):
