@@ -16,12 +16,10 @@ export default function Cart() {
   >([]);
 
   useEffect(() => {
-    const items =
-      (location.state as {
-        cartItems: Array<{ id?: number; name: string; price: number; quantity: number }>;
-      })?.cartItems || [];
-    setCartItems(items);
-  }, [location.state]);
+    const saved = localStorage.getItem("cartItems");
+    setCartItems(saved ? JSON.parse(saved) : []);
+  }, []);
+
 
   const [paymentMethod, setPaymentMethod] = useState<string>("");
 
@@ -78,6 +76,9 @@ export default function Cart() {
 
       const data = await resp.json();
       console.log("Order confirmed!", data);
+
+      localStorage.removeItem("cartItems");
+      setCartItems([]);
 
       alert(`Order confirmed! Payment method: ${paymentMethod}`);
       navigate("/kiosk/confirmation", {});

@@ -23,6 +23,12 @@ export default function Orders() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  useEffect(() => {
+    const saved = localStorage.getItem("cartItems");
+    setCartItems(saved ? JSON.parse(saved) : []);
+  }, []);
+
+
   const drinkCategories = [
     "Milk Tea",
     "Fruit Tea",
