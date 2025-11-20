@@ -113,12 +113,13 @@ def get_all_orders():
     }
     """
     try:
-        orders = db.session.query(models.Order).all()
+        orders = db.session.query(models.Order).order_by(models.Order.timestamp.desc()).all()
+
         data = [
             {
                 "id": o.id,
                 "customer_id": o.customer_id,
-                # "timestamp": o.timestamp.isoformat() if o.timestamp else None,
+                "timestamp": o.timestamp.isoformat() if o.timestamp else None,
                 "total_price": float(o.total_price) if o.total_price else None,
                 "pearls_earned": o.pearls_earned,
                 "employee_id": o.employee_id,
@@ -204,3 +205,71 @@ def create_order():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+    
+@bp.route('/users/create', methods=['POST'])
+def create_user():
+    data = request.get_json()
+    try:
+        new_user = models.User(
+            uid=data['uid'],
+            name=data.get('name'),
+            email=data.get('email'),
+            role=data['role'],
+            phone_number=data.get('phone_number'),
+            rewards=data.get('rewards', 0)
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        return jsonify({
+            "id": new_user.id,
+            "message": "User created successfully"
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@bp.route('/users/<int:user_id>/delete', methods=['DELETE'])
+@cross_origin(origins=["http://localhost:5173", "https://project3-gang80-1.onrender.com"], supports_credentials=True)
+def delete_user(user_id):
+    user = db.session.query(models.User).filter_by(id=user_id).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted successfully"}), 200
+    
+@bp.route('/users', methods=['GET'])
+def get_users():
+    """
+    Return all users in the system.
+    Response format:
+    {
+        "users": [
+            { id, uid, name, email, role, phone_number, rewards }
+        ]
+    }
+    """
+    try:
+        users = db.session.query(models.User).all()
+
+        data = [
+            {
+                "id": u.id,
+                "uid": u.uid,
+                "name": u.name,
+                "email": u.email,
+                "role": u.role,
+                "phone_number": u.phone_number,
+                "rewards": u.rewards
+            }
+            for u in users
+        ]
+
+        return jsonify({"users": data}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
