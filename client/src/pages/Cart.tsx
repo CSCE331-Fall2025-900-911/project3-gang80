@@ -11,18 +11,13 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState<Array<{ id: number; name: string; price: number; quantity: number }>>([]);
 
   useEffect(() => {
-    const stateCart = (location.state as { cartItems: Array<{ id:number; name: string; price: number; quantity: number }> })?.cartItems;
-    if (stateCart && stateCart.length > 0) {
-      setCartItems(stateCart);
-      localStorage.setItem("cartItems", JSON.stringify(stateCart));
+    const saved = localStorage.getItem("cartItems");
+    if (saved) {
+      setCartItems(JSON.parse(saved));
+    } else {
+      setCartItems([]);
     }
-    else {
-      const saved = localStorage.getItem("cartItems");
-      if (saved) {
-        setCartItems(JSON.parse(saved));
-      }
-    }
-  }, [location.state]);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
@@ -39,7 +34,7 @@ export default function Cart() {
   };
 
   const handleCheckout = () => {
-    navigate("/kiosk/checkout", { state: { orderType: orderType, cartItems: cartItems } });
+    navigate("/kiosk/checkout", { state: { orderType: orderType } });
   };
 
   return (

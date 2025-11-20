@@ -10,8 +10,15 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Confirmation from "./pages/Confirmation";
 import './App.css'
+import { useEffect } from "react";
 
 function App() {
+
+  useEffect(() => {
+    localStorage.removeItem("cartItems");
+  }, []);
+
+
   return (
     <Router>
       <Navbar />
