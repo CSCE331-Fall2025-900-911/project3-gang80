@@ -127,12 +127,14 @@ export default function Employees() {
       >
         {selectedUser && (
           <>
-            <button
-              className="absolute left-0 top-1/2 -translate-x-full bg-white shadow-lg rounded-l-full px-3 py-2 text-xl font-bold"
-              onClick={() => setDrawerOpen(false)}
-            >
-              &gt;
-            </button>
+            {drawerOpen && (
+              <button
+                className="absolute left-0 top-1/2 -translate-x-full bg-white shadow-lg rounded-l-full px-3 py-2 text-xl font-bold"
+                onClick={() => setDrawerOpen(false)}
+              >
+                &gt;
+              </button>
+            )}
 
             <h2 className="text-2xl font-semibold mb-4">User Details</h2>
 
