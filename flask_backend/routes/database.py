@@ -169,16 +169,22 @@ def create_order():
             payment_method=data['payment_method'],
             timestamp=datetime.utcnow(),  # ✅ timestamp from backend
         )
+        
+        db.session.add(new_order)
+        db.session.flush()  # Get new_order.id before commit
 
         for item in data['items']:
-            order_item = models.OrderItem(
+            order_item = models.JointOrderItem(
                 menu_item_id=item['menu_item_id'],
-                quantity=item['quantity'],
+                # quantity=item['quantity'],
+                order_id=new_order.id
             )
-            new_order.items.append(order_item)
-
-        db.session.add(new_order)
+        #     new_order.items.append(order_item)
+            db.session.add(order_item)
         db.session.commit()
+
+        # db.session.add(new_order)
+        # db.session.commit()
 
         return jsonify({
             "order_id": new_order.id,

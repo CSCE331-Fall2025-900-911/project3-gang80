@@ -1,8 +1,19 @@
 import { NavLink } from "react-router-dom";
 import logo from "../assets/sharetea_logo.png";
 import "./Navbar.css";
+import LoginButton from "./LoginButton"
+import { useEffect } from "react";
 
 function Navbar() {
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, []);
+
   return (
     <nav className="sidebar">
       <div className="logo-container">
@@ -34,6 +45,11 @@ function Navbar() {
           <NavLink to="/kiosk">
             Kiosk
           </NavLink>
+        </li>
+        <li>
+          <a>
+            <LoginButton />
+          </a>
         </li>
       </ul>
     </nav>

@@ -55,25 +55,36 @@
 
 /* Accessibility buttons */
 .accessibility-buttons {
-  display: flex;
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  gap: 12px;
+  display:flex;
+  gap:12px;
+  position:absolute;
+  top: 12px;
+  right: 12px;
 }
 
 .circle-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background-color: #d9d9d9;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s ease;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.08);
+  cursor:pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
 
-.circle-btn:hover {
-  background-color: #bfbfbf;
+.circle-btn img {
+  width:28px;
+  height:28px;
+  object-fit:contain;
+  pointer-events:none; 
+}
+
+.circle-btn:focus {
+  outline: 3px solid #4c9ffe;
+  outline-offset: 2px;
 }
 
 /* Drink grid */
