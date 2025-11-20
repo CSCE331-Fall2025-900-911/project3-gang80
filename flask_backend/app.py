@@ -1,9 +1,13 @@
 from flask import Flask
 from db import init_db, db
 from routes import database
-
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": [
+    "https://project3-gang80-1.onrender.com",
+    "http://localhost:5173"
+]}}, supports_credentials=True)
 
 # Set up DB
 init_db(app)
