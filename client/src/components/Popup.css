@@ -5,9 +5,11 @@
   background: white;
   padding: 2rem;
   border-radius: 10px;
-  min-width: 1000px;
-  min-height: 700px;
+  width: 90%;
+  max-width: 1500px;
+  max-height: 80vh;
   text-align: center;
+  overflow-y: auto
 }
 
 .popup {
@@ -20,6 +22,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow-y: auto
 }
 
 .popup-bar {
@@ -35,3 +38,6 @@
   @apply border border-gray-700 rounded-lg px-4 py-2 text-gray-800 hover:opacity-50 transition-opacity duration-200;
 }
 
+.popup-button-1 {
+  @apply border border-black bg-red-600 rounded-lg px-4 py-2 text-white hover:opacity-50 transition-opacity duration-200;
+}
