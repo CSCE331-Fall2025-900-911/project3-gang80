@@ -26,6 +26,7 @@ h1 {
   gap: 15px;
   width: 100%;
   max-width: 800px;
+  margin: 20px 0;
 }
 .cart-item {
   display: flex;
@@ -62,6 +63,12 @@ h1 {
   cursor: pointer;
   transition: background 0.3s ease;
 }
+
+.remove-btn:hover {
+  background: #E53A40;
+  transform: scale(1.05); 
+}
+
 .cart-total {
   font-size: 20px;
   font-weight: bold;
@@ -84,6 +91,12 @@ h1 {
   cursor: pointer;
   transition: background 0.3s ease;
 }
+
+.back-btn:hover {
+  background: #E53A40;
+  transform: scale(1.02);
+}
+
 .checkout-btn {
   width: 100%;
   padding: 15px;
@@ -95,4 +108,9 @@ h1 {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
+}
+
+.checkout-btn:hover {
+  background: #E53A40;
+  transform: scale(1.02);
 }

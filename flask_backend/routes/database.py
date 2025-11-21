@@ -205,24 +205,52 @@ def create_order():
             pearls_earned=data['pearls_earned'],
             employee_id=data.get('employee_id'),
             payment_method=data['payment_method'],
-            timestamp=datetime.utcnow(),  # ✅ timestamp from backend
+            timestamp=datetime.utcnow(),  
         )
         
         db.session.add(new_order)
         db.session.flush()  # Get new_order.id before commit
 
         for item in data['items']:
-            order_item = models.JointOrderItem(
+            base_order_item = models.JointOrderItem(
                 menu_item_id=item['menu_item_id'],
-                # quantity=item['quantity'],
                 order_id=new_order.id
             )
-        #     new_order.items.append(order_item)
-            db.session.add(order_item)
-        db.session.commit()
+            db.session.add(base_order_item)
 
-        # db.session.add(new_order)
-        # db.session.commit()
+            base_ingredients = db.session.query(models.JointRecipeIngredient).filter_by(
+                menu_item_id = item['menu_item_id']
+            ).all()
+
+            for ing in base_ingredients:
+                inventory_item = db.session.query(models.Inventory).filter_by(
+                    id = ing.inventory_item_id
+                ).first()
+                if inventory_item:
+                    inventory_item.quantity -= ing.quantity_used
+                    if inventory_item.quantity < 0:
+                        inventory_item.quantity = 0
+            
+            for topping in item.get('toppings', []):
+                topping_order_item = models.JointOrderItem(
+                    menu_item_id = topping['id'],
+                    order_id = new_order.id
+                )
+                db.session.add(topping_order_item)
+
+                topping_ingredients = db.session.query(models.JointRecipeIngredient).filter_by(
+                    menu_item_id = topping['id']
+                ).all()
+                for ing in topping_ingredients:
+                    inventory_item = db.session.query(models.Inventory).filter_by(
+                        id = ing.inventory_item_id
+                    ).first()
+                    if inventory_item:
+                        inventory_item.quantity -= ing.quantity_used
+                        if inventory_item.quantity < 0:
+                            inventory_item.quantity = 0
+
+        db.session.commit()
 
         return jsonify({
             "order_id": new_order.id,
