@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 
 interface PopupProps {
   onClose: () => void;
-  onAdd: () => void;
+  onAdd: (
+    iceLevel: number | null,
+    sweetnessLevel: number | null,
+    toppings: Array<{ id: number; name: string; price: number }>
+  ) => void;
   title: string;
   imgName: string;
 }
@@ -83,21 +87,6 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
     }
   };
 
-  // const handleAdd = () => {
-  //   // Build a summary of selections
-  //   const toppings = Object.entries(selectedToppings)
-  //     .filter(([_, v]) => v)
-  //     .map(([k]) => Number(k));
-
-  //   const summary = {
-  //     ice_level_id: selectedIce,
-  //     sweetness_level_id: selectedSweetness,
-  //     topping_ids: toppings,
-  //   };
-  //   console.log('Adding with selections', summary);
-  //   // keep existing signature: call onAdd without args
-  //   onAdd();
-  // };
 
   const handleAdd = () => {
     if (!selectedIce || !selectedSweetness) {
@@ -105,7 +94,15 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
       return;
     }
     setValidationMsg(null);
-    onAdd();
+
+    const selectedToppingsArray = Object.entries(selectedToppings)
+      .filter(([_, selected]) => selected)
+      .map(([id]) => {
+        const topping = Object.values(mods).flat().find((mod) => mod.id === Number(id));
+        return { id: Number(id), name: topping?.name || "", price: topping?.price || 0 };
+      });
+
+    onAdd(selectedIce, selectedSweetness, selectedToppingsArray);
   };
 
   const selectionsComplete = !!selectedIce && !!selectedSweetness;

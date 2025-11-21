@@ -15,10 +15,38 @@ bp = Blueprint('database', __name__)
 # Define Routes
 
 @bp.route('/menu_items', methods=['GET'])
-@require_roles(Roles.CUSTOMER, Roles.EMPLOYEE, Roles.MANAGER)
-def get_items(uid):
-    count = db.session.query(models.MenuItem).count()  # SQLAlchemy row count
-    return jsonify({"menu_items_count": count})
+def get_items():
+    """
+    Return all menu items with full details:
+    [
+        {
+            id,
+            name,
+            price,
+            category,
+            description,
+            img_name
+        },
+        ...
+    ]
+    """
+    try:
+        items = db.session.query(models.MenuItem).all()
+        data = []
+        for item in items:
+            data.append({
+                "id": item.id,
+                "name": item.name,
+                "price": float(item.price),   # ensure JSON serializable
+                "category": item.category,
+                "description": item.description,
+                "img_name": item.img_name
+            })
+        return jsonify({"items": data})
+    except Exception as e:
+        print("Error fetching menu items:", e)
+        return jsonify({"error": "Failed to fetch menu items"}), 500
+
 
 
 @bp.route('/menu_items_by_category', methods=['GET'])

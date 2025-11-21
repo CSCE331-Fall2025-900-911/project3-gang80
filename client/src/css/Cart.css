@@ -25,20 +25,37 @@ h1 {
   flex-direction: column;
   gap: 15px;
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
 }
 .cart-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
+  padding: 20px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
 }
+
+.cart-item-content {
+  display: flex;
+  flex-direction: column; 
+}
+
+.cart-item-content .customizations {
+  margin-top: 5px;
+  font-size: 0.95em;
+}
+
+.cart-item-content .base-drink {
+  font-weight: bold;
+}
+
 .remove-btn {
   background: #D3191C;
   color: white;
+  align-self: center;
   border: none;
   padding: 8px 12px;
   border-radius: 4px;

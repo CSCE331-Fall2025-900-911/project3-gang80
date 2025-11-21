@@ -8,12 +8,17 @@ export default function Cart() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const orderType =
-    (location.state as { orderType: string })?.orderType || "unknown";
+  const orderType = (location.state as { orderType: string })?.orderType || "unknown";
 
-  const [cartItems, setCartItems] = useState<
-    Array<{ id?: number; name: string; price: number; quantity: number }>
-  >([]);
+  interface CartItem {
+    id?: number;
+    name: string;
+    price: number;
+    quantity: number;
+    toppings?: Array<{ id: number; name: string; price: number }>;
+  }
+
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
@@ -104,8 +109,12 @@ export default function Cart() {
         <ul>
           {cartItems.map((item, index) => (
             <li key={index}>
-              {item.name} - ${item.price} × {item.quantity} = $
-              {(item.price * item.quantity).toFixed(2)}
+              {item.name} 
+              {item.toppings && item.toppings.length > 0 && (
+                <> + {item.toppings.map(t => t.name).join(", ")}</>
+              )}
+              {" - $"}
+              {item.price.toFixed(2)} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
             </li>
           ))}
         </ul>
