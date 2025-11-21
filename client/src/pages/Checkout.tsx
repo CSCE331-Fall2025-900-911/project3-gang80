@@ -57,7 +57,7 @@ export default function Cart() {
     try {
       const resp = await fetch(`${API_URL}/api/db/orders/create`, {
         method: "POST",
-        mode: "cors", // ✅ allow CORS
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
         },

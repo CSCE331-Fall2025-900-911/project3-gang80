@@ -23,6 +23,8 @@ export default function Orders() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
     setCartItems(saved ? JSON.parse(saved) : []);
@@ -109,23 +111,7 @@ export default function Orders() {
 
     handleClosePopup();
   };
-  // const addToCart = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
-  //   const existing = cartItems.findIndex((item) => item.name === drink.name);
-  //   if (existing !== -1) {
-  //     setCartItems((prevItems) => {
-  //       const newItems = [...prevItems];
-  //       newItems[existing].quantity += 1;
-  //       return newItems;
-  //     })
-  //   }
-  //     else {
-  //     setCartItems((prevItems) => [
-  //       ...prevItems,
-  //       { name: drink.name, price: drink.price, quantity: 1 },
-  //     ]);
-  //   }
-  //   handleClosePopup();
-  // };
+  
 
   return (
     <div className="orders-layout">
@@ -143,8 +129,6 @@ export default function Orders() {
           ))}
         </div>
 
-        {/* For later sprint */}
-        {/* Accessibility Buttons */}
         <div className="accessibility-buttons">
           <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
@@ -185,7 +169,7 @@ export default function Orders() {
             onClick={() =>
               navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems} })}
             className="view-cart-btn">
-            Go to Cart ({cartItems.length})
+            Go to Cart ({totalCartItems})
           </button>
         </div>
       </div>
