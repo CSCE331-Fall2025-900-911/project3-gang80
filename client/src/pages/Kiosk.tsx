@@ -7,7 +7,7 @@ import logo from "../assets/sharetea_logo.png";
 export default function Kiosk() {
   const navigate = useNavigate();
 
-  const handleSelect = (type: "dine-in" | "take-out") => {
+  const handleSelect = (type: "Dine-In" | "Take-Out") => {
     navigate("/kiosk/order", { state: { orderType: type } });
   };
 
@@ -18,10 +18,10 @@ export default function Kiosk() {
       </div>
       <h1 className="kiosk-title">Dine In or Take Out?</h1>
       <div className="kiosk-buttons">
-        <button className="kiosk-button" onClick={() => handleSelect("dine-in")}>
+        <button className="kiosk-button" onClick={() => handleSelect("Dine-In")}>
           <img src={dineInImg} alt="Dine In" />
         </button>
-        <button className="kiosk-button" onClick={() => handleSelect("take-out")}>
+        <button className="kiosk-button" onClick={() => handleSelect("Take-Out")}>
           <img src={takeOutImg} alt="Take Out" />
         </button>
       </div>

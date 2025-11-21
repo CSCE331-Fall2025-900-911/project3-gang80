@@ -15,10 +15,38 @@ bp = Blueprint('database', __name__)
 # Define Routes
 
 @bp.route('/menu_items', methods=['GET'])
-@require_roles(Roles.CUSTOMER, Roles.EMPLOYEE, Roles.MANAGER)
-def get_items(uid):
-    count = db.session.query(models.MenuItem).count()  # SQLAlchemy row count
-    return jsonify({"menu_items_count": count})
+def get_items():
+    """
+    Return all menu items with full details:
+    [
+        {
+            id,
+            name,
+            price,
+            category,
+            description,
+            img_name
+        },
+        ...
+    ]
+    """
+    try:
+        items = db.session.query(models.MenuItem).all()
+        data = []
+        for item in items:
+            data.append({
+                "id": item.id,
+                "name": item.name,
+                "price": float(item.price),   # ensure JSON serializable
+                "category": item.category,
+                "description": item.description,
+                "img_name": item.img_name
+            })
+        return jsonify({"items": data})
+    except Exception as e:
+        print("Error fetching menu items:", e)
+        return jsonify({"error": "Failed to fetch menu items"}), 500
+
 
 
 @bp.route('/menu_items_by_category', methods=['GET'])
@@ -177,24 +205,52 @@ def create_order():
             pearls_earned=data['pearls_earned'],
             employee_id=data.get('employee_id'),
             payment_method=data['payment_method'],
-            timestamp=datetime.utcnow(),  # ✅ timestamp from backend
+            timestamp=datetime.utcnow(),  
         )
         
         db.session.add(new_order)
         db.session.flush()  # Get new_order.id before commit
 
         for item in data['items']:
-            order_item = models.JointOrderItem(
+            base_order_item = models.JointOrderItem(
                 menu_item_id=item['menu_item_id'],
-                # quantity=item['quantity'],
                 order_id=new_order.id
             )
-        #     new_order.items.append(order_item)
-            db.session.add(order_item)
-        db.session.commit()
+            db.session.add(base_order_item)
 
-        # db.session.add(new_order)
-        # db.session.commit()
+            base_ingredients = db.session.query(models.JointRecipeIngredient).filter_by(
+                menu_item_id = item['menu_item_id']
+            ).all()
+
+            for ing in base_ingredients:
+                inventory_item = db.session.query(models.Inventory).filter_by(
+                    id = ing.inventory_item_id
+                ).first()
+                if inventory_item:
+                    inventory_item.quantity -= ing.quantity_used
+                    if inventory_item.quantity < 0:
+                        inventory_item.quantity = 0
+            
+            for topping in item.get('toppings', []):
+                topping_order_item = models.JointOrderItem(
+                    menu_item_id = topping['id'],
+                    order_id = new_order.id
+                )
+                db.session.add(topping_order_item)
+
+                topping_ingredients = db.session.query(models.JointRecipeIngredient).filter_by(
+                    menu_item_id = topping['id']
+                ).all()
+                for ing in topping_ingredients:
+                    inventory_item = db.session.query(models.Inventory).filter_by(
+                        id = ing.inventory_item_id
+                    ).first()
+                    if inventory_item:
+                        inventory_item.quantity -= ing.quantity_used
+                        if inventory_item.quantity < 0:
+                            inventory_item.quantity = 0
+
+        db.session.commit()
 
         return jsonify({
             "order_id": new_order.id,
