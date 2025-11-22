@@ -142,6 +142,7 @@ export default function Orders() {
     <div className="orders-layout">
       <div className="orders-content">
         {/* Category Bar */}
+        {!showPopup && (
         <div className="category-bar">
           {drinkCategories.map((s) => (
             <button
@@ -153,6 +154,7 @@ export default function Orders() {
             </button>
           ))}
         </div>
+        )}
 
         <div className="accessibility-buttons">
           <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
