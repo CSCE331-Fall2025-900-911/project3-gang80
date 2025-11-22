@@ -90,14 +90,14 @@
 /* Drink grid */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(4, 160px);
-  gap: 40px;
+  grid-template-columns: repeat(4, 200px);
+  gap: 20px;
   justify-content: center;
 }
 
 .grid-item {
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 280px;
   background: #ddd;
   border-radius: 4px;
   display: flex;
@@ -113,14 +113,16 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 160px;
-  height: 160px;
+  width: 200px;
+  height: 225px;
   background: #f3f3f3;
   border: 1px solid #d0d5dd;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   text-align: center;
+  padding: 8px;
+  gap: 8px;
 }
 
 .drink-btn:hover {
@@ -134,17 +136,26 @@
   box-shadow: 0 2px 5px rgba(16, 24, 40, 0.1);
 }
 
+.drink-tile-img {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.drink-tile-img img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 .drink-tile-name {
   font-weight: 600;
   color: black;
-  margin-bottom: 6px;
   text-align: center;
-}
-
-.drink-tile-price {
-  color: #555;
-  font-size: 14px;
-  opacity: 0.8;
+  font-size: 16px;
 }
 
 .view-cart-btn {
