@@ -147,8 +147,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                 ) : (
                   // Group into Ice, Sweetness, Toppings and then render other categories below
                   (() => {
-                    const iceItems: ModificationItem[] = [];
-                    const sweetItems: ModificationItem[] = [];
+                    let iceItems: ModificationItem[] = [];
+                    let sweetItems: ModificationItem[] = [];
                     const toppingItems: ModificationItem[] = [];
                     const otherGroups: Array<{ cat: string; items: ModificationItem[] }> = [];
 
@@ -194,6 +194,20 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                         }
                       });
                     });
+
+                    // Sort items by preferred order
+                    const sortByPreference = (items: ModificationItem[], preference: string[]): ModificationItem[] => {
+                      return items.sort((a, b) => {
+                        const aIndex = preference.findIndex(p => a.name?.toLowerCase().includes(p));
+                        const bIndex = preference.findIndex(p => b.name?.toLowerCase().includes(p));
+                        if (aIndex === -1) return 1;
+                        if (bIndex === -1) return -1;
+                        return aIndex - bIndex;
+                      });
+                    };
+
+                    sweetItems = sortByPreference(sweetItems, ['regular', 'half', 'no sugar']);
+                    iceItems = sortByPreference(iceItems, ['regular', 'less', 'no ice']);
 
                     // Prepare slices to match requested visual counts
                     const iceSlice = iceItems.slice(0, 4);
