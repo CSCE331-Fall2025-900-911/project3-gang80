@@ -8,6 +8,7 @@ import languageIcon from '../assets/language.png';
 import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
 import { API_URL } from "../globals";
+import DrinkImage from "../components/DrinkImage";
 
 interface CartItem {
   id: number;
@@ -142,6 +143,7 @@ export default function Orders() {
     <div className="orders-layout">
       <div className="orders-content">
         {/* Category Bar */}
+        {!showPopup && (
         <div className="category-bar">
           {drinkCategories.map((s) => (
             <button
@@ -153,6 +155,7 @@ export default function Orders() {
             </button>
           ))}
         </div>
+        )}
 
         <div className="accessibility-buttons">
           <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
@@ -168,6 +171,7 @@ export default function Orders() {
               title={d.description || d.name}
               onClick={() => handleOpenPopup(d)}
             >
+              <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} /></div>
               <div className="drink-tile-name">{d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
