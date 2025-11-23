@@ -38,6 +38,7 @@ export default function Inventory() {
   const [itemPrice, setItemPrice] = React.useState(0.0);
   const [cartItems, setCartItems] = React.useState<CartItem[]>([]);
   const [createMode, setCreateMode] = React.useState(false);
+  const [inventoryItems, setInventoryItems] = React.useState<Array<{ id?: number; name: string }>>([]);
 
   const totalPrice = cartItems.reduce((total, item) => total + item.quantity * item.price, 0);
 
@@ -62,6 +63,22 @@ export default function Inventory() {
     setItemPrice((item as any).restock_price ?? (item as any).restockPrice ?? 0.0);
     setPopupVisible(true);
   }
+  // Fetch inventory list from backend and store ids/names for the grid
+  async function fetchInventory() {
+    try {
+      const resp = await fetch(`${API_URL}/api/db/inventory`);
+      if (!resp.ok) {
+        console.error('Failed to fetch inventory list', resp.status);
+        return;
+      }
+      const data = await resp.json();
+      setInventoryItems((data.inventory || []).map((i: any) => ({ id: i.id, name: i.name })));
+    } catch (err) {
+      console.error('Error loading inventory list', err);
+    }
+  }
+
+  React.useEffect(() => { fetchInventory(); }, []);
   const [submitting, setSubmitting] = React.useState(false);
 
   async function handleAddToCart() {
@@ -74,49 +91,27 @@ export default function Inventory() {
     }
   }
 
+  function removeFromCart(index: number) {
+    setCartItems((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleCreateNewItem() {
     // Validate
     if (!itemName || itemQuantity < 0 || itemPrice < 0) {
       alert('Please provide a valid name, quantity and price');
       return;
     }
+    // By default create items only for this session (do not persist to DB)
+    // Give the item a temporary negative id so it won't collide with DB ids
+    const tempId = -Date.now();
+    const newItem = { id: tempId, name: itemName };
 
-    try {
-      const payload = {
-        name: itemName,
-        quantity: itemQuantity,
-        restock_price: itemPrice,
-      };
-      const resp = await fetch(`${API_URL}/api/db/inventory/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (resp.status === 409) {
-        const body = await resp.json().catch(() => ({}));
-        alert(`Item already exists (id=${body.id || 'unknown'})`);
-        return;
-      }
-
-      if (!resp.ok) {
-        const txt = await resp.text();
-        console.error('Create inventory failed:', resp.status, txt);
-        alert('Failed to create inventory item. See console for details.');
-        return;
-      }
-
-      const data = await resp.json();
-      console.log('Created inventory item:', data);
-      alert('Inventory item created successfully');
-      setPopupVisible(false);
-      setCreateMode(false);
-      // Optionally add created item to the cart
-      setCartItems([...cartItems, { id: data.id, name: data.name, quantity: data.quantity, price: data.restock_price ?? 0 }]);
-    } catch (err) {
-      console.error('Create error:', err);
-      alert('Error creating inventory item. See console for details.');
-    }
+    // add to local inventory list and to cart for this session only
+    setInventoryItems((prev) => [...prev, newItem]);
+    setCartItems((prev) => [...prev, { id: tempId, name: itemName, quantity: itemQuantity, price: itemPrice }]);
+    setPopupVisible(false);
+    setCreateMode(false);
+    // If you later want to persist to the DB, call your backend endpoint with the item data
   }
 
   async function handleSubmitOrder() {
@@ -165,7 +160,7 @@ export default function Inventory() {
     <div className="inventory-layout">
       <div className="inventory-page">
         <h2>Ingredients</h2>
-        <IngredientGrid onIngredientClick={handleIngredientClick} onAddNew={handleOpenCreate} />
+        <IngredientGrid items={inventoryItems} onIngredientClick={handleIngredientClick} onAddNew={handleOpenCreate} />
       </div>
       <div className="inventory-cart">
         <h2 className="inventory-cart-title">Cart</h2>
@@ -173,7 +168,10 @@ export default function Inventory() {
           {cartItems.map((item, index) => (
             <div key={index} className="inventory-cart-item">
               <span>{item.name} x {item.quantity}</span>
-              <span>${(item.quantity * item.price).toFixed(2)}</span>
+              <div style={{display: 'flex', gap: 8, alignItems: 'center'}}>
+                <span>${(item.quantity * item.price).toFixed(2)}</span>
+                <button onClick={() => removeFromCart(index)} style={{background: 'transparent', border: 'none', color: '#D3191C', cursor: 'pointer'}}>Remove</button>
+              </div>
             </div>
           ))}
         </div>
