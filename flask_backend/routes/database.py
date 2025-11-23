@@ -120,6 +120,162 @@ def menu_modifications():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+
+@bp.route('/inventory', methods=['GET'])
+def get_inventory():
+    """Return all inventory items.
+
+    Response format:
+    {
+      "inventory": [ { id, name, quantity, restock_price }, ... ]
+    }
+    """
+    try:
+        items = db.session.query(models.Inventory).order_by(models.Inventory.name.asc()).all()
+        data = [
+            {
+                "id": i.id,
+                "name": i.name,
+                "quantity": i.quantity,
+                "restock_price": float(i.restock_price) if i.restock_price is not None else None,
+            }
+            for i in items
+        ]
+        return jsonify({"inventory": data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/inventory/item', methods=['GET'])
+def get_inventory_item():
+    """Return a single inventory item by id or name.
+
+    Query params: ?id=<int> or ?name=<string>
+    Response: { id, name, quantity, restock_price }
+    """
+    item_id = request.args.get('id')
+    name = request.args.get('name')
+    if not item_id and not name:
+        return jsonify({"error": "Provide id or name parameter"}), 400
+
+    try:
+        query = db.session.query(models.Inventory)
+        if item_id:
+            query = query.filter(models.Inventory.id == int(item_id))
+        else:
+            # case-insensitive match
+            query = query.filter(models.Inventory.name.ilike(name))
+
+        item = query.first()
+        if not item:
+            return jsonify({"error": "Item not found"}), 404
+
+        data = {
+            "id": item.id,
+            "name": item.name,
+            "quantity": item.quantity,
+            "restock_price": float(item.restock_price) if item.restock_price is not None else None,
+        }
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/inventory/order', methods=['POST', 'OPTIONS'])
+def submit_inventory_order():
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    data = request.get_json() or {}
+    items = data.get('items')
+    if not items or not isinstance(items, list):
+        return jsonify({"error": "Provide an 'items' array in the request body"}), 400
+
+    try:
+        updated = []
+        for it in items:
+            inv = None
+            inv_id = it.get('inventory_id') or it.get('id')
+            name = it.get('name')
+            if inv_id is not None:
+                inv = db.session.query(models.Inventory).filter(models.Inventory.id == int(inv_id)).first()
+            elif name:
+                inv = db.session.query(models.Inventory).filter(models.Inventory.name.ilike(name)).first()
+
+            # If the inventory item does not exist, create it (simple behavior)
+            if not inv:
+                inv = models.Inventory(
+                    name = name or f"item_{int(db.session.query(models.Inventory).count())+1}",
+                    quantity = 0,
+                    restock_price = it.get('price', 0.0)
+                )
+                db.session.add(inv)
+                db.session.flush()
+
+            # Interpret submitted quantity as restock (increase inventory)
+            qty = int(it.get('quantity', 0))
+            inv.quantity = (inv.quantity or 0) + qty
+
+            # Optionally update restock price if provided
+            if 'price' in it and it.get('price') is not None:
+                inv.restock_price = it.get('price')
+
+            updated.append({
+                "id": inv.id,
+                "name": inv.name,
+                "quantity": inv.quantity,
+                "restock_price": float(inv.restock_price) if inv.restock_price is not None else None,
+            })
+
+        db.session.commit()
+        return jsonify({"updated": updated, "message": "Inventory updated"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/inventory/create', methods=['POST', 'OPTIONS'])
+def create_inventory_item():
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    data = request.get_json() or {}
+    name = data.get('name')
+    quantity = data.get('quantity', 0)
+    restock_price = data.get('restock_price', None)
+
+    if not name:
+        return jsonify({"error": "Missing 'name' in request body"}), 400
+
+    try:
+        # If item exists, return conflict
+        existing = db.session.query(models.Inventory).filter(models.Inventory.name.ilike(name)).first()
+        if existing:
+            return jsonify({"error": "Item already exists", "id": existing.id}), 409
+
+        new_item = models.Inventory(
+            name=name,
+            quantity=int(quantity),
+            restock_price=restock_price,
+        )
+        db.session.add(new_item)
+        db.session.commit()
+
+        return jsonify({
+            "id": new_item.id,
+            "name": new_item.name,
+            "quantity": new_item.quantity,
+            "restock_price": float(new_item.restock_price) if new_item.restock_price is not None else None,
+            "message": "Inventory item created"
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
 @bp.route('/orders', methods=['GET'])
 def get_all_orders():
     """
