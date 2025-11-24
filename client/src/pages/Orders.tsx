@@ -9,6 +9,8 @@ import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
 import { API_URL } from "../globals";
 import DrinkImage from "../components/DrinkImage";
+import LanguageSelector from '../components/LanguageSelector';
+import { useTranslation } from '../contexts/TranslationContext';
 
 interface CartItem {
   id: number;
@@ -55,6 +57,10 @@ export default function Orders() {
 
   const [showPopup, setShowPopup] = React.useState(false);
   const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
+  const [showLangSelector, setShowLangSelector] = React.useState(false);
+  const { language, translate } = useTranslation();
+  const [translatedCategories, setTranslatedCategories] = useState<string[] | null>(null);
+  const [translatedDrinkNames, setTranslatedDrinkNames] = useState<Record<number, string>>({});
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -82,6 +88,50 @@ export default function Orders() {
       active = false;
     };
   }, [selected]);
+
+  // Translate category labels when language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en') {
+        setTranslatedCategories(null);
+        return;
+      }
+      try {
+        const results = await Promise.all(drinkCategories.map((c) => translate(c)));
+        if (mounted) setTranslatedCategories(results);
+      } catch (err) {
+        console.error('Category translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [language]);
+
+  // Translate drink names when drinks list or language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en' || drinks.length === 0) {
+        setTranslatedDrinkNames({});
+        return;
+      }
+      try {
+        const pairs = await Promise.all(drinks.map(async (d) => {
+          const tn = await translate(d.name);
+          return { id: d.id, name: tn };
+        }));
+        if (!mounted) return;
+        const map: Record<number, string> = {};
+        pairs.forEach((p) => { map[p.id] = p.name; });
+        setTranslatedDrinkNames(map);
+      } catch (err) {
+        console.error('Drink translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [drinks, language]);
 
   const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     setSelectedDrink(drink);
@@ -145,20 +195,23 @@ export default function Orders() {
         {/* Category Bar */}
         {!showPopup && (
         <div className="category-bar">
-          {drinkCategories.map((s) => (
-            <button
-              key={s}
-              className={`category-btn ${s === selected ? "active" : ""}`}
-              onClick={() => setSelected(s)}
-            >
-              {s}
-            </button>
-          ))}
+          {drinkCategories.map((s, idx) => {
+            const label = (translatedCategories && translatedCategories[idx]) ? translatedCategories[idx] : s;
+            return (
+              <button
+                key={s}
+                className={`category-btn ${s === selected ? "active" : ""}`}
+                onClick={() => setSelected(s)}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
         )}
 
         <div className="accessibility-buttons">
-          <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
+          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={contrastIcon}></img></button>
         </div>
@@ -172,7 +225,7 @@ export default function Orders() {
               onClick={() => handleOpenPopup(d)}
             >
               <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} /></div>
-              <div className="drink-tile-name">{d.name}</div>
+              <div className="drink-tile-name">{translatedDrinkNames[d.id] ?? d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
           ))}
@@ -192,6 +245,7 @@ export default function Orders() {
             </div>
           )}
         </div>
+        {showLangSelector && <LanguageSelector onClose={() => setShowLangSelector(false)} />}
         <div>
           <button
             style={{ marginTop: "20px" }}

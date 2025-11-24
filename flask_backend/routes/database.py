@@ -1,13 +1,15 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from db import db
 import models
 from helpers.permissions import Roles, require_roles
 from sqlalchemy import text
 from datetime import datetime
-from globals import ORG_ID, SUPERUSER_EMAILS
+from globals import ORG_ID, SUPERUSER_EMAILS, TRANSLATE_API_KEY
 from flask_cors import cross_origin
 from google.oauth2 import id_token
 from google.auth.transport import requests
+import requests as http_requests
+import os
 
 
 bp = Blueprint('database', __name__)
@@ -275,6 +277,39 @@ def create_inventory_item():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/translate', methods=['POST', 'OPTIONS'])
+def translate_text():
+    # Proxy translation requests to Google Cloud Translation API (v2)
+    if request.method == 'OPTIONS':
+        return '', 200
+
+    body = request.get_json() or {}
+    q = body.get('q')
+    target = body.get('target', 'en')
+    if not q:
+        return jsonify({"error": "Missing 'q' (text) in request body"}), 400
+
+    api_key = TRANSLATE_API_KEY
+    if not api_key:
+        return jsonify({"error": "Translation API key not configured on server"}), 500
+
+    url = 'https://translation.googleapis.com/language/translate/v2'
+    payload = {
+        'q': q,
+        'target': target,
+        'format': 'text'
+    }
+    params = {'key': api_key}
+
+    try:
+        resp = http_requests.post(url, params=params, json=payload, timeout=10)
+        resp.raise_for_status()
+        return jsonify(resp.json()), resp.status_code
+    except Exception as e:
+        current_app.logger.error('Translate request failed: %s', e)
+        return jsonify({"error": "Translation request failed", "details": str(e)}), 502
     
 @bp.route('/orders', methods=['GET'])
 def get_all_orders():
