@@ -41,3 +41,109 @@
 .popup-button-1 {
   @apply border border-black bg-red-600 rounded-lg px-4 py-2 text-white hover:opacity-50 transition-opacity duration-200;
 }
+
+/* UI CONTRAST VERSION */
+
+.popup.high-contrast .background {
+  background: #242424;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 1500px;
+  max-height: 80vh;
+  text-align: center;
+  overflow-y: auto
+}
+
+.popup.high-contrast .popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto
+}
+
+.popup.high-contrast .popup .background{
+  border: 2px solid #D3191C;
+}
+
+.popup.high-contrast .popup-bar {
+  display: flex;                 
+  justify-content: space-between; 
+  align-items: center;           
+  border-bottom: 2px solid #D3191C; 
+  padding-bottom: 0.5rem;      
+  margin-bottom: 1rem;      
+}
+
+/* High-contrast Close button */
+.popup.high-contrast .popup-button {
+  border: 2px solid #D3191C; /* gray-700 */
+  border-radius: 0.5rem;     /* rounded-lg */
+  padding: 0.5rem 1rem;      /* py-2 px-4 */
+  color: #D3191C;            /* text-gray-800 */
+  transition: opacity 0.2s ease;
+}
+
+.popup.high-contrast .popup-bar h2 {
+  color: white;
+}
+
+.popup.high-contrast .popup-button:hover {
+  opacity: 0.5; /* hover:opacity-50 */
+}
+
+/* High-contrast Add button */
+.popup.high-contrast .popup-button-1 {
+  border: 1px solid #000000; /* border-black */
+  background-color: #dc2626; /* bg-red-600 */
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  color: #ffffff;
+  transition: opacity 0.2s ease;
+}
+
+.popup.high-contrast .popup-button-1:hover {
+  opacity: 0.5;
+}
+
+.popup.high-contrast .drink-pic {
+  background: #4e4e4e;
+  border: 2px solid #D3191C;
+  color: white;
+}
+
+.popup.high-contrast .option-cont {
+  background: #4e4e4e;
+  border: 2px solid #D3191C;
+}
+
+.popup.high-contrast .category-col {
+  background: #242424;
+  border: 2px solid #D3191C;
+  color: white;
+}
+
+.popup.high-contrast .category-col .cat-butt{
+  border: 2px solid #D3191C ;
+  color: white;
+  background: #4e4e4e ;
+}
+
+.popup.high-contrast .category-col .cat-butt:hover{
+  border: 2px solid #4e4e4e ;
+  color: white;
+  background: #D3191C;
+}
+
+.popup.high-contrast .cat-butt.selected {
+  background-color: #dc2626;    /* bg-red-600 */
+  color: white;                 /* text-white */
+  border-color: black;          /* border-black */
+}
+

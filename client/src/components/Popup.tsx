@@ -1,6 +1,8 @@
 import "./Popup.css";
 import DrinkImage from "./DrinkImage";
 import { useEffect, useState } from "react";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+
 
 interface PopupProps {
   onClose: () => void;
@@ -30,6 +32,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   const [selectedSweetness, setSelectedSweetness] = useState<number | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<Record<number, boolean>>({});
   const [validationMsg, setValidationMsg] = useState<string | null>(null);
+  const { highContrast } = useContrastMode();
+
 
   useEffect(() => {
     // Fetch modification items grouped by category from backend
@@ -108,7 +112,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   const selectionsComplete = !!selectedIce && !!selectedSweetness;
 
   return (
-    <div className="popup">
+    <div className={`popup ${highContrast ? "high-contrast" : ""}`}>
       <div className="background">
 
         <div className="popup-bar">
@@ -129,14 +133,14 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
         )}
 
         <div className="flex gap-4">
-          <div className="flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
+          <div className="drink-pic flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
             <h2 className="text-3xl font-bold my-4">{title}</h2>
             <div className="max-w-[200px] object-contain">
               <DrinkImage drink={imgName} />
             </div>
           </div>
 
-          <div className="flex flex-1 bg-gray-50 rounded p-4 min-w-0">
+          <div className="option-cont flex flex-1 bg-gray-50 rounded p-4 min-w-0">
             <div className="min-w-0 w-fit">
               {loading && <p className="text-center">Loading options...</p>}
               {error && <p className="text-red-600 text-center">Error loading options: {error}</p>}
@@ -218,7 +222,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                       <div>
                         {/* Three columns: Sweetness | Ice | Toppings */}
                         <div className="grid grid-cols-3 gap-4 mb-2">
-                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Sweetness Level</h2>
                             <div className="flex flex-wrap gap-3 justify-center">
                               {sweetSlice.map((it) => {
@@ -227,7 +231,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -236,7 +240,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Ice Level</h2>
                             <div className="flex flex-wrap gap-3 justify-center">
                               {iceSlice.map((it) => {
@@ -245,7 +249,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -254,7 +258,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Toppings</h2>
                             <div className="flex flex-wrap gap-3 justify-center">
                               {toppingSlice.map((it) => {
@@ -263,7 +267,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>

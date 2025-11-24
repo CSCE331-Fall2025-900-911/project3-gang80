@@ -2,6 +2,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Cart.css";
 //import { API_URL } from "../globals";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+
 
 interface CartItem {
   id: number;
@@ -28,6 +30,9 @@ export default function Cart() {
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [menuMap, setMenuMap] = useState<Record<number, string>>({});
+
+  const { highContrast } = useContrastMode();
+
 
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
@@ -90,7 +95,7 @@ export default function Cart() {
   }
 
   return (
-    <div className="cart-page">
+    <div className={`cart-page ${highContrast ? "high-contrast" : ""}`}>
       <h1>Cart</h1>
       <p>Order type: {orderType}</p>
       {cartItems.length === 0 ? (<p>Your cart is empty.</p>) : (
