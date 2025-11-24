@@ -11,6 +11,7 @@ import { API_URL } from "../globals";
 import DrinkImage from "../components/DrinkImage";
 import LanguageSelector from '../components/LanguageSelector';
 import { useTranslation } from '../contexts/TranslationContext';
+import { useContrastMode } from '../contexts/ContrastModeContext';
 
 interface CartItem {
   id: number;
