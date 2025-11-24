@@ -30,6 +30,7 @@ function LoginButton() {
       const loginResponse = await makeApiCall("/api/db/login", "POST", {}) as { user_role?: string; user_id?: number; message?: string } | undefined;
       
       if (loginResponse && loginResponse.user_role) {
+        localStorage.setItem("user_id", String(loginResponse.user_id));
         localStorage.setItem("user_role", loginResponse.user_role);
         console.log("User role set to:", loginResponse.user_role);
         window.dispatchEvent(new Event('storage_changed'));
