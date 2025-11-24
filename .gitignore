@@ -1,4 +1,5 @@
 flask_backend/passwd.txt
+flask_backend/weather_api_key.txt
 /flask_backend/client_secret*
 flask_backend/superuser_emails.txt
 flask_backend/translate_key.txt

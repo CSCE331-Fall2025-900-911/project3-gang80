@@ -1,6 +1,7 @@
 from flask import Flask
 from db import init_db, db
 from routes import database
+from routes import weather
 from flask_cors import CORS
 import os
 
@@ -35,6 +36,8 @@ def test():
 
 # Register route files
 app.register_blueprint(database.bp, url_prefix='/api/db')
+# Register weather blueprint so /api/weather is available
+app.register_blueprint(weather.weather_bp)
 
 # Health route to verify translate API key is set (useful for local debugging)
 @app.route('/api/db/translate/health')
