@@ -1,10 +1,17 @@
 import "./Popup.css";
 import DrinkImage from "./DrinkImage";
 import { useEffect, useState } from "react";
+import { useTranslation } from "../contexts/TranslationContext";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+
 
 interface PopupProps {
   onClose: () => void;
-  onAdd: () => void;
+  onAdd: (
+    iceLevel: number | null,
+    sweetnessLevel: number | null,
+    toppings: Array<{ id: number; name: string; price: number }>
+  ) => void;
   title: string;
   imgName: string;
 }
@@ -25,6 +32,13 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   const [selectedIce, setSelectedIce] = useState<number | null>(null);
   const [selectedSweetness, setSelectedSweetness] = useState<number | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<Record<number, boolean>>({});
+  const [validationMsg, setValidationMsg] = useState<string | null>(null);
+  const { highContrast } = useContrastMode();
+  const { language, translate, t } = useTranslation();
+  const [translatedNames, setTranslatedNames] = useState<Record<number, string>>({});
+  const [translatedStatics, setTranslatedStatics] = useState<Record<string, string>>({});
+  const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
+
 
   useEffect(() => {
     // Fetch modification items grouped by category from backend
@@ -44,6 +58,66 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Translate modification item names and static UI text when language changes
+  useEffect(() => {
+    let mounted = true;
+    async function runTranslations() {
+      if (language === 'en') {
+        setTranslatedNames({});
+        setTranslatedStatics({});
+        setTranslatedTitle(null);
+        return;
+      }
+      try {
+        // collect unique names to translate
+        const names: Array<{ id?: number; text: string }> = [];
+        Object.values(mods).flat().forEach((m) => {
+          if (m && m.name) names.push({ id: m.id, text: m.name });
+        });
+
+        const staticTexts = [
+          'Customization',
+          'Loading options...',
+          'Please select both Sweetness Level and Ice Level.',
+          'Sweetness Level',
+          'Ice Level',
+          'Toppings',
+          'Add',
+          'Close',
+          'No customization options available.'
+        ];
+
+        const promises: Promise<string>[] = [];
+        names.forEach(n => promises.push(translate(n.text)));
+        staticTexts.forEach(s => promises.push(translate(s)));
+
+        const results = await Promise.all(promises);
+        if (!mounted) return;
+        const nameMap: Record<number, string> = {};
+        names.forEach((n, idx) => { if (n.id) nameMap[n.id] = results[idx]; });
+
+        const staticsMap: Record<string, string> = {};
+        staticTexts.forEach((s, i) => { staticsMap[s] = results[names.length + i]; });
+
+        setTranslatedNames(nameMap);
+        setTranslatedStatics(staticsMap);
+        // also translate popup title if present in the current UI
+        if (title) {
+          try {
+            const tt = await translate(title);
+            if (mounted) setTranslatedTitle(tt);
+          } catch (err) {
+            console.error('Title translate error', err);
+          }
+        }
+      } catch (err) {
+        console.error('Popup translation error', err);
+      }
+    }
+    runTranslations();
+    return () => { mounted = false; };
+  }, [language, mods]);
 
 
   const handleSelect = (item: ModificationItem) => {
@@ -70,8 +144,10 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
 
     if (kind === 'ice') {
       setSelectedIce((prev) => (prev === item.id ? null : item.id));
+      setValidationMsg(null);
     } else if (kind === 'sweetness') {
       setSelectedSweetness((prev) => (prev === item.id ? null : item.id));
+      setValidationMsg(null);
     } else if (kind === 'toppings') {
       setSelectedToppings((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
     } else {
@@ -80,53 +156,68 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
     }
   };
 
-  // const handleAdd = () => {
-  //   // Build a summary of selections
-  //   const toppings = Object.entries(selectedToppings)
-  //     .filter(([_, v]) => v)
-  //     .map(([k]) => Number(k));
 
-  //   const summary = {
-  //     ice_level_id: selectedIce,
-  //     sweetness_level_id: selectedSweetness,
-  //     topping_ids: toppings,
-  //   };
-  //   console.log('Adding with selections', summary);
-  //   // keep existing signature: call onAdd without args
-  //   onAdd();
-  // };
+  const handleAdd = () => {
+    if (!selectedIce || !selectedSweetness) {
+      setValidationMsg("Please select both Sweetness Level and Ice Level.");
+      return;
+    }
+    setValidationMsg(null);
+
+    const selectedToppingsArray = Object.entries(selectedToppings)
+      .filter(([_, selected]) => selected)
+      .map(([id]) => {
+        const topping = Object.values(mods).flat().find((mod) => mod.id === Number(id));
+        return { id: Number(id), name: topping?.name || "", price: topping?.price || 0 };
+      });
+
+    onAdd(selectedIce, selectedSweetness, selectedToppingsArray);
+  };
+
+  const selectionsComplete = !!selectedIce && !!selectedSweetness;
 
   return (
-    <div className="popup">
+    <div className={`popup ${highContrast ? "high-contrast" : ""}`}>
       <div className="background">
 
         <div className="popup-bar">
-            <button onClick={onClose} className="popup-button">Close</button>
-            <h2 className="text-xl font-semibold">Customization</h2>
-            <button onClick={onAdd} className="popup-button">Add</button> 
+            <button onClick={onClose} className="popup-button">{translatedStatics['Close'] ?? t('Close')}</button>
+            <h2 className="text-xl font-semibold">{translatedStatics['Customization'] ?? t('Customization')}</h2>
+            <button
+              onClick={handleAdd}
+              className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
+            >
+              {translatedStatics['Add'] ?? t('Add')}
+            </button> 
         </div>
 
+        {validationMsg && (
+          <div className="mt-2 text-center text-red-600 font-semibold">
+            {translatedStatics[validationMsg] ?? t(validationMsg)}
+          </div>
+        )}
+
         <div className="flex gap-4">
-          <div className="flex flex-1 flex-col bg-gray-50 rounded p-4 justify-center items-center">
-            <h2 className="text-3xl font-bold my-10">{title}</h2>
-            <div className="max-w-[200px] object-contain">
-              <DrinkImage drink={imgName} />
-            </div>
+          <div className="drink-pic flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
+            <h2 className="text-3xl font-bold my-4">{translatedTitle ?? title}</h2>
+              <div className="max-w-[240px] object-contain">
+                <DrinkImage drink={imgName} size={192} fill variant="popup" className="mx-auto" />
+              </div>
           </div>
 
-          <div className="flex flex-1 bg-gray-50 rounded p-4 justify-center">
-            <div className="w-full">
-              {loading && <p className="text-center">Loading options...</p>}
-              {error && <p className="text-red-600 text-center">Error loading options: {error}</p>}
+          <div className="option-cont flex flex-1 bg-gray-50 rounded p-4 min-w-0">
+            <div className="min-w-0 w-fit">
+              {loading && <p className="text-center">{translatedStatics['Loading options...'] ?? t('Loading options...')}</p>}
+              {error && <p className="text-red-600 text-center">{translatedStatics['Error loading options:'] ?? t('Error loading options:')} {error}</p>}
 
               {!loading && !error && (
-                Object.keys(mods).length === 0 ? (
-                  <p className="text-center">No customization options available.</p>
+                  Object.keys(mods).length === 0 ? (
+                  <p className="text-center">{translatedStatics['No customization options available.'] ?? t('No customization options available.')}</p>
                 ) : (
                   // Group into Ice, Sweetness, Toppings and then render other categories below
                   (() => {
-                    const iceItems: ModificationItem[] = [];
-                    const sweetItems: ModificationItem[] = [];
+                    let iceItems: ModificationItem[] = [];
+                    let sweetItems: ModificationItem[] = [];
                     const toppingItems: ModificationItem[] = [];
                     const otherGroups: Array<{ cat: string; items: ModificationItem[] }> = [];
 
@@ -173,25 +264,39 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                       });
                     });
 
+                    // Sort items by preferred order
+                    const sortByPreference = (items: ModificationItem[], preference: string[]): ModificationItem[] => {
+                      return items.sort((a, b) => {
+                        const aIndex = preference.findIndex(p => a.name?.toLowerCase().includes(p));
+                        const bIndex = preference.findIndex(p => b.name?.toLowerCase().includes(p));
+                        if (aIndex === -1) return 1;
+                        if (bIndex === -1) return -1;
+                        return aIndex - bIndex;
+                      });
+                    };
+
+                    sweetItems = sortByPreference(sweetItems, ['regular', 'half', 'no sugar']);
+                    iceItems = sortByPreference(iceItems, ['regular', 'less', 'no ice']);
+
                     // Prepare slices to match requested visual counts
                     const iceSlice = iceItems.slice(0, 4);
-                    const sweetSlice = sweetItems.slice(0, 2);
+                    const sweetSlice = sweetItems.slice(0, 4);
                     const toppingSlice = toppingItems.slice(0, 10);
 
                     return (
                       <div>
                         {/* Three columns: Sweetness | Ice | Toppings */}
-                        <div className="grid grid-cols-3 gap-4 mb-6">
-                          <div className="col-span-1 bg-white rounded p-3">
-                            <h2 className="text-lg font-medium mb-2">Sweetness Level</h2>
-                            <div className="flex flex-wrap gap-3">
+                        <div className="grid grid-cols-3 gap-4 mb-2">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
+                            <h2 className="text-lg font-medium mb-2">{translatedStatics['Sweetness Level'] ?? t('Sweetness Level')}</h2>
+                            <div className="flex flex-wrap gap-3 justify-center">
                               {sweetSlice.map((it) => {
                                 const selected = selectedSweetness === it.id;
                                 return (
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`px-4 py-2 border rounded transition ${selected ? 'bg-blue-600 text-white border-blue-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -200,16 +305,16 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3">
-                            <h2 className="text-lg font-medium mb-2">Ice Level</h2>
-                            <div className="flex flex-wrap gap-3">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
+                            <h2 className="text-lg font-medium mb-2">{translatedStatics['Ice Level'] ?? t('Ice Level')}</h2>
+                            <div className="flex flex-wrap gap-3 justify-center">
                               {iceSlice.map((it) => {
                                 const selected = selectedIce === it.id;
                                 return (
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`px-4 py-2 border rounded transition ${selected ? 'bg-blue-600 text-white border-blue-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -218,18 +323,18 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3">
-                            <h2 className="text-lg font-medium mb-2">Toppings</h2>
-                            <div className="flex flex-wrap gap-3">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
+                            <h2 className="text-lg font-medium mb-2">{translatedStatics['Toppings'] ?? t('Toppings')}</h2>
+                            <div className="flex flex-wrap gap-3 justify-center">
                               {toppingSlice.map((it) => {
                                 const selected = !!selectedToppings[it.id];
                                 return (
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`px-4 py-2 border rounded transition ${selected ? 'bg-blue-600 text-white border-blue-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
-                                    {it.name}
+                                    {translatedNames[it.id] ?? it.name}
                                   </button>
                                 );
                               })}
@@ -240,7 +345,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                         {/* Other categories rendered as generic groups below */}
                         {otherGroups.map((g) => (
                           <div key={g.cat} className="mb-6">
-                            <h2 className="text-lg font-medium mb-2">{g.cat}</h2>
+                            <h2 className="text-lg font-medium mb-2">{translatedStatics[g.cat] ?? g.cat}</h2>
                             <div className="flex flex-wrap gap-3">
                               {g.items.map((it) => {
                                 const selected = !!selectedToppings[it.id];
@@ -250,7 +355,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                     onClick={() => handleSelect(it)}
                                     className={`px-4 py-2 border rounded transition ${selected ? 'bg-blue-600 text-white border-blue-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
-                                    {it.name}
+                                    {translatedNames[it.id] ?? it.name}
                                   </button>
                                 );
                               })}

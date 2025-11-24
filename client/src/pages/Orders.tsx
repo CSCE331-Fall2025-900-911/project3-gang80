@@ -8,6 +8,20 @@ import languageIcon from '../assets/language.png';
 import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
 import { API_URL } from "../globals";
+import DrinkImage from "../components/DrinkImage";
+import LanguageSelector from '../components/LanguageSelector';
+import { useTranslation } from '../contexts/TranslationContext';
+import { useContrastMode } from '../contexts/ContrastModeContext';
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  iceLevel?: number | null;
+  sweetnessLevel?: number | null;
+  toppings?: Array<{ id: number; name: string; price: number }>;
+}
 
 export default function Orders() {
   //const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
@@ -16,12 +30,18 @@ export default function Orders() {
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<
-  Array<{ id:number; name: string; price: number; quantity: number }>
-  >(() => {
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem("cartItems");
     return saved ? JSON.parse(saved) : [];
   });
+
+  const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("cartItems");
+    setCartItems(saved ? JSON.parse(saved) : []);
+  }, []);
+
 
   const drinkCategories = [
     "Milk Tea",
@@ -38,6 +58,14 @@ export default function Orders() {
 
   const [showPopup, setShowPopup] = React.useState(false);
   const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
+  const [showLangSelector, setShowLangSelector] = React.useState(false);
+  const { language, translate } = useTranslation();
+  const [translatedCategories, setTranslatedCategories] = useState<string[] | null>(null);
+  const [translatedDrinkNames, setTranslatedDrinkNames] = useState<Record<number, string>>({});
+
+  const { highContrast, setHighContrast } = useContrastMode();
+
+
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -66,6 +94,50 @@ export default function Orders() {
     };
   }, [selected]);
 
+  // Translate category labels when language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en') {
+        setTranslatedCategories(null);
+        return;
+      }
+      try {
+        const results = await Promise.all(drinkCategories.map((c) => translate(c)));
+        if (mounted) setTranslatedCategories(results);
+      } catch (err) {
+        console.error('Category translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [language]);
+
+  // Translate drink names when drinks list or language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en' || drinks.length === 0) {
+        setTranslatedDrinkNames({});
+        return;
+      }
+      try {
+        const pairs = await Promise.all(drinks.map(async (d) => {
+          const tn = await translate(d.name);
+          return { id: d.id, name: tn };
+        }));
+        if (!mounted) return;
+        const map: Record<number, string> = {};
+        pairs.forEach((p) => { map[p.id] = p.name; });
+        setTranslatedDrinkNames(map);
+      } catch (err) {
+        console.error('Drink translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [drinks, language]);
+
   const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     setSelectedDrink(drink);
     setShowPopup(true);
@@ -81,13 +153,22 @@ export default function Orders() {
   }, [cartItems]);
 
   // Handle drink selection
-  const handleDrinkSelect = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
-    console.log("Selected drink:", drink);
-    // TODO: display modifications popup
-    // setSelectedDrink(drink);
-    // setShowPopup(true);
+  const handleDrinkSelect = (
+    drink: { id: number; name: string; price: number; img_name?: string | null; },
+    iceLevel?: number | null,
+    sweetnessLevel?: number | null,
+    toppings?: Array<{ id: number; name: string; price: number }>
+  ) => {
+    const existing = cartItems.findIndex(
+      (item) =>
+        item.id === drink.id &&
+        item.iceLevel === iceLevel &&
+        item.sweetnessLevel === sweetnessLevel &&
+        JSON.stringify(item.toppings?.map(t => t.id).sort()) === JSON.stringify(toppings?.map(t => t.id).sort())
+    );
 
-    const existing = cartItems.findIndex((item) => item.id === drink.id);
+    console.log("Selected drink:", drink);
+
     if (existing !== -1) {
       setCartItems((prevItems) => {
         const newItems = [...prevItems];
@@ -97,52 +178,47 @@ export default function Orders() {
     } else {
       setCartItems((prevItems) => [
         ...prevItems,
-        { id: drink.id, name: drink.name, price: drink.price, quantity: 1 },
+        { 
+          id: drink.id, 
+          name: drink.name, 
+          price: drink.price + (toppings?.reduce((sum, t) => sum + (t.price || 0), 0) || 0), 
+          quantity: 1,
+          iceLevel,
+          sweetnessLevel,
+          toppings
+        },
       ]);
     }
 
     handleClosePopup();
   };
-  // const addToCart = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
-  //   const existing = cartItems.findIndex((item) => item.name === drink.name);
-  //   if (existing !== -1) {
-  //     setCartItems((prevItems) => {
-  //       const newItems = [...prevItems];
-  //       newItems[existing].quantity += 1;
-  //       return newItems;
-  //     })
-  //   }
-  //     else {
-  //     setCartItems((prevItems) => [
-  //       ...prevItems,
-  //       { name: drink.name, price: drink.price, quantity: 1 },
-  //     ]);
-  //   }
-  //   handleClosePopup();
-  // };
+  
 
   return (
-    <div className="orders-layout">
+    <div className={`orders-layout ${highContrast ? "high-contrast" : ""}`}>
       <div className="orders-content">
         {/* Category Bar */}
+        {!showPopup && (
         <div className="category-bar">
-          {drinkCategories.map((s) => (
-            <button
-              key={s}
-              className={`category-btn ${s === selected ? "active" : ""}`}
-              onClick={() => setSelected(s)}
-            >
-              {s}
-            </button>
-          ))}
+          {drinkCategories.map((s, idx) => {
+            const label = (translatedCategories && translatedCategories[idx]) ? translatedCategories[idx] : s;
+            return (
+              <button
+                key={s}
+                className={`category-btn ${s === selected ? "active" : ""}`}
+                onClick={() => setSelected(s)}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
+        )}
 
-        {/* For later sprint */}
-        {/* Accessibility Buttons */}
         <div className="accessibility-buttons">
-          <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
+          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
-          <button className="circle-btn" aria-label="Accessibility option 2"><img src={contrastIcon}></img></button>
+          <button className="circle-btn contrast-btn" aria-label="Accessibility option 2" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon}></img></button>
         </div>
         {/* Drink Grid */}
         <div className="grid-container">
@@ -153,7 +229,8 @@ export default function Orders() {
               title={d.description || d.name}
               onClick={() => handleOpenPopup(d)}
             >
-              <div className="drink-tile-name">{d.name}</div>
+              <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} size={140}/></div>
+              <div className="drink-tile-name">{translatedDrinkNames[d.id] ?? d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
           ))}
@@ -161,7 +238,7 @@ export default function Orders() {
           {showPopup && selectedDrink && (
           <Popup
             onClose={handleClosePopup}
-            onAdd={() => handleDrinkSelect(selectedDrink!)}
+            onAdd={(ice, sweet, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings)}
             title={selectedDrink.name}
             imgName={selectedDrink.img_name ?? ""}
           />
@@ -173,13 +250,14 @@ export default function Orders() {
             </div>
           )}
         </div>
+        {showLangSelector && <LanguageSelector onClose={() => setShowLangSelector(false)} />}
         <div>
           <button
             style={{ marginTop: "20px" }}
             onClick={() =>
               navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems} })}
             className="view-cart-btn">
-            Go to Cart ({cartItems.length})
+            Go to Cart ({totalCartItems})
           </button>
         </div>
       </div>

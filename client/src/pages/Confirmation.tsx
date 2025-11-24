@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+import "../css/Confirmation.css";
 
 interface Order {
     id: number;
@@ -12,6 +15,7 @@ interface Order {
 }
 
 export default function Confirmation() {
+    const { highContrast } = useContrastMode();
     const navigate = useNavigate();
     const [latestOrderNumber, setLatestOrderNumber] = useState<number | null>(null);
     // const API_URL = "https://project3-gang80.onrender.com"; // change to deployed URL in production
@@ -43,7 +47,7 @@ export default function Confirmation() {
     }, []);
 
     return (
-        <div className="absolute top-0 w-[calc(100%-250px)] h-screen flex flex-col items-center justify-center text-center gap-6">
+        <div className={`confirmation-page absolute top-0 w-[calc(100%-250px)] h-screen flex flex-col items-center justify-center text-center gap-6 ${highContrast ? "high-contrast" : ""}`}>
             <h1 className="text-3xl font-bold">Order confirmed!</h1>
             <h2 className="text-xl">Order Number: {latestOrderNumber ?? "Loading..."}</h2>
             <button

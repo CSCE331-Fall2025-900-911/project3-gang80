@@ -116,6 +116,9 @@ function Navbar() {
           </li>
         )}
       </ul>
+      <div className="login-button-container">
+        <LoginButton />
+      </div>
     </nav>
   );
 }
