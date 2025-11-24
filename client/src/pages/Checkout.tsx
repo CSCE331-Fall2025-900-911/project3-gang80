@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Checkout.css";
 import { useContrastMode } from "../contexts/ContrastModeContext";
+import { useTranslation } from "../contexts/TranslationContext";
 
 
 export default function Cart() {
@@ -10,6 +11,9 @@ export default function Cart() {
   const location = useLocation();
   const navigate = useNavigate();
   const { highContrast } = useContrastMode();
+  const { language, translate, t } = useTranslation();
+  const [translatedStatics, setTranslatedStatics] = useState<Record<string, string>>({});
+  const [translatedNames, setTranslatedNames] = useState<Record<number, string>>({});
 
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
 
@@ -27,6 +31,39 @@ export default function Cart() {
     const saved = localStorage.getItem("cartItems");
     setCartItems(saved ? JSON.parse(saved) : []);
   }, []);
+
+  // Translate static labels and item names when language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en') {
+        setTranslatedStatics({});
+        setTranslatedNames({});
+        return;
+      }
+      try {
+        const names = cartItems.map(ci => ci.name);
+        const staticTexts = [
+          'Checkout','Order type:', 'Order Summary', 'Subtotal:', 'Tax:', 'Total:', 'Select Payment Method', '--Select--', 'Credit Card', 'Cash', 'Back to Cart', 'Confirm Order'
+        ];
+        const promises: Promise<string>[] = [];
+        names.forEach(n => promises.push(translate(n)));
+        staticTexts.forEach(s => promises.push(translate(s)));
+        const results = await Promise.all(promises);
+        if (!mounted) return;
+        const nameMap: Record<number, string> = {};
+  cartItems.forEach((_ci, idx) => { nameMap[idx] = results[idx]; });
+        const staticsMap: Record<string, string> = {};
+        staticTexts.forEach((s, i) => { staticsMap[s] = results[names.length + i]; });
+        setTranslatedNames(nameMap);
+        setTranslatedStatics(staticsMap);
+      } catch (err) {
+        console.error('Checkout translation error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [language, cartItems]);
 
 
   const [paymentMethod, setPaymentMethod] = useState<string>("");
@@ -104,15 +141,15 @@ export default function Cart() {
 
   return (
     <div className={`checkout-page ${highContrast ? "high-contrast" : ""}`}>
-      <h1>Checkout</h1>
-      <p>Order type: {orderType}</p>
+      <h1>{translatedStatics['Checkout'] ?? t('Checkout')}</h1>
+      <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
 
       <div className="checkout-summary">
-        <h2>Order Summary</h2>
+        <h2>{translatedStatics['Order Summary'] ?? t('Order Summary')}</h2>
         <ul>
           {cartItems.map((item, index) => (
             <li key={index}>
-              {item.name} 
+              {(translatedNames[index] ?? item.name)} 
               {item.toppings && item.toppings.length > 0 && (
                 <> + {item.toppings.map(t => t.name).join(", ")}</>
               )}
@@ -121,26 +158,26 @@ export default function Cart() {
             </li>
           ))}
         </ul>
-        <h3>Subtotal: ${subtotal.toFixed(2)}</h3>
-        <h3>Tax: ${tax.toFixed(2)}</h3>
-        <h2>Total: ${total.toFixed(2)}</h2>
+        <h3>{translatedStatics['Subtotal:'] ?? t('Subtotal:')} ${subtotal.toFixed(2)}</h3>
+        <h3>{translatedStatics['Tax:'] ?? t('Tax:')} ${tax.toFixed(2)}</h3>
+        <h2>{translatedStatics['Total:'] ?? t('Total:')} ${total.toFixed(2)}</h2>
       </div>
 
       <div className="payment-section">
-        <h2>Select Payment Method</h2>
+        <h2>{translatedStatics['Select Payment Method'] ?? t('Select Payment Method')}</h2>
         <select value={paymentMethod} onChange={handlePaymentChange}>
-          <option value="">--Select--</option>
-          <option value="Credit Card">Credit Card</option>
-          <option value="Cash">Cash</option>
+          <option value="">{translatedStatics['--Select--'] ?? t('--Select--')}</option>
+          <option value="Credit Card">{translatedStatics['Credit Card'] ?? t('Credit Card')}</option>
+          <option value="Cash">{translatedStatics['Cash'] ?? t('Cash')}</option>
         </select>
       </div>
 
       <div className="checkout-actions">
         <button className="back-btn" onClick={handleBack}>
-          Back to Cart
+          {translatedStatics['Back to Cart'] ?? t('Back to Cart')}
         </button>
         <button className="confirm-btn" onClick={handleConfirmOrder}>
-          Confirm Order
+          {translatedStatics['Confirm Order'] ?? t('Confirm Order')}
         </button>
       </div>
     </div>
