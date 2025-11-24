@@ -229,7 +229,7 @@ export default function Orders() {
               title={d.description || d.name}
               onClick={() => handleOpenPopup(d)}
             >
-              <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} /></div>
+              <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} size={140}/></div>
               <div className="drink-tile-name">{translatedDrinkNames[d.id] ?? d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
