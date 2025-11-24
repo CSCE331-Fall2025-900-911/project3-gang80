@@ -8,6 +8,19 @@ import languageIcon from '../assets/language.png';
 import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
 import { API_URL } from "../globals";
+import DrinkImage from "../components/DrinkImage";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  iceLevel?: number | null;
+  sweetnessLevel?: number | null;
+  toppings?: Array<{ id: number; name: string; price: number }>;
+}
 
 export default function Orders() {
   //const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
@@ -16,12 +29,12 @@ export default function Orders() {
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState<
-  Array<{ id:number; name: string; price: number; quantity: number }>
-  >(() => {
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem("cartItems");
     return saved ? JSON.parse(saved) : [];
   });
+
+  const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
@@ -44,6 +57,10 @@ export default function Orders() {
 
   const [showPopup, setShowPopup] = React.useState(false);
   const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
+
+  const { highContrast, setHighContrast } = useContrastMode();
+
+
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -87,13 +104,22 @@ export default function Orders() {
   }, [cartItems]);
 
   // Handle drink selection
-  const handleDrinkSelect = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
-    console.log("Selected drink:", drink);
-    // TODO: display modifications popup
-    // setSelectedDrink(drink);
-    // setShowPopup(true);
+  const handleDrinkSelect = (
+    drink: { id: number; name: string; price: number; img_name?: string | null; },
+    iceLevel?: number | null,
+    sweetnessLevel?: number | null,
+    toppings?: Array<{ id: number; name: string; price: number }>
+  ) => {
+    const existing = cartItems.findIndex(
+      (item) =>
+        item.id === drink.id &&
+        item.iceLevel === iceLevel &&
+        item.sweetnessLevel === sweetnessLevel &&
+        JSON.stringify(item.toppings?.map(t => t.id).sort()) === JSON.stringify(toppings?.map(t => t.id).sort())
+    );
 
-    const existing = cartItems.findIndex((item) => item.id === drink.id);
+    console.log("Selected drink:", drink);
+
     if (existing !== -1) {
       setCartItems((prevItems) => {
         const newItems = [...prevItems];
@@ -103,34 +129,27 @@ export default function Orders() {
     } else {
       setCartItems((prevItems) => [
         ...prevItems,
-        { id: drink.id, name: drink.name, price: drink.price, quantity: 1 },
+        { 
+          id: drink.id, 
+          name: drink.name, 
+          price: drink.price + (toppings?.reduce((sum, t) => sum + (t.price || 0), 0) || 0), 
+          quantity: 1,
+          iceLevel,
+          sweetnessLevel,
+          toppings
+        },
       ]);
     }
 
     handleClosePopup();
   };
-  // const addToCart = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
-  //   const existing = cartItems.findIndex((item) => item.name === drink.name);
-  //   if (existing !== -1) {
-  //     setCartItems((prevItems) => {
-  //       const newItems = [...prevItems];
-  //       newItems[existing].quantity += 1;
-  //       return newItems;
-  //     })
-  //   }
-  //     else {
-  //     setCartItems((prevItems) => [
-  //       ...prevItems,
-  //       { name: drink.name, price: drink.price, quantity: 1 },
-  //     ]);
-  //   }
-  //   handleClosePopup();
-  // };
+  
 
   return (
-    <div className="orders-layout">
+    <div className={`orders-layout ${highContrast ? "high-contrast" : ""}`}>
       <div className="orders-content">
         {/* Category Bar */}
+        {!showPopup && (
         <div className="category-bar">
           {drinkCategories.map((s) => (
             <button
@@ -142,13 +161,12 @@ export default function Orders() {
             </button>
           ))}
         </div>
+        )}
 
-        {/* For later sprint */}
-        {/* Accessibility Buttons */}
         <div className="accessibility-buttons">
           <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
-          <button className="circle-btn" aria-label="Accessibility option 2"><img src={contrastIcon}></img></button>
+          <button className="circle-btn contrast-btn" aria-label="Accessibility option 2" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon}></img></button>
         </div>
         {/* Drink Grid */}
         <div className="grid-container">
@@ -159,6 +177,7 @@ export default function Orders() {
               title={d.description || d.name}
               onClick={() => handleOpenPopup(d)}
             >
+              <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} /></div>
               <div className="drink-tile-name">{d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
@@ -167,7 +186,7 @@ export default function Orders() {
           {showPopup && selectedDrink && (
           <Popup
             onClose={handleClosePopup}
-            onAdd={() => handleDrinkSelect(selectedDrink!)}
+            onAdd={(ice, sweet, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings)}
             title={selectedDrink.name}
             imgName={selectedDrink.img_name ?? ""}
           />
@@ -185,7 +204,7 @@ export default function Orders() {
             onClick={() =>
               navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems} })}
             className="view-cart-btn">
-            Go to Cart ({cartItems.length})
+            Go to Cart ({totalCartItems})
           </button>
         </div>
       </div>

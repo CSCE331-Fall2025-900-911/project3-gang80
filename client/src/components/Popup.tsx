@@ -1,10 +1,16 @@
 import "./Popup.css";
 import DrinkImage from "./DrinkImage";
 import { useEffect, useState } from "react";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+
 
 interface PopupProps {
   onClose: () => void;
-  onAdd: () => void;
+  onAdd: (
+    iceLevel: number | null,
+    sweetnessLevel: number | null,
+    toppings: Array<{ id: number; name: string; price: number }>
+  ) => void;
   title: string;
   imgName: string;
 }
@@ -26,6 +32,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   const [selectedSweetness, setSelectedSweetness] = useState<number | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<Record<number, boolean>>({});
   const [validationMsg, setValidationMsg] = useState<string | null>(null);
+  const { highContrast } = useContrastMode();
+
 
   useEffect(() => {
     // Fetch modification items grouped by category from backend
@@ -83,21 +91,6 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
     }
   };
 
-  // const handleAdd = () => {
-  //   // Build a summary of selections
-  //   const toppings = Object.entries(selectedToppings)
-  //     .filter(([_, v]) => v)
-  //     .map(([k]) => Number(k));
-
-  //   const summary = {
-  //     ice_level_id: selectedIce,
-  //     sweetness_level_id: selectedSweetness,
-  //     topping_ids: toppings,
-  //   };
-  //   console.log('Adding with selections', summary);
-  //   // keep existing signature: call onAdd without args
-  //   onAdd();
-  // };
 
   const handleAdd = () => {
     if (!selectedIce || !selectedSweetness) {
@@ -105,13 +98,21 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
       return;
     }
     setValidationMsg(null);
-    onAdd();
+
+    const selectedToppingsArray = Object.entries(selectedToppings)
+      .filter(([_, selected]) => selected)
+      .map(([id]) => {
+        const topping = Object.values(mods).flat().find((mod) => mod.id === Number(id));
+        return { id: Number(id), name: topping?.name || "", price: topping?.price || 0 };
+      });
+
+    onAdd(selectedIce, selectedSweetness, selectedToppingsArray);
   };
 
   const selectionsComplete = !!selectedIce && !!selectedSweetness;
 
   return (
-    <div className="popup">
+    <div className={`popup ${highContrast ? "high-contrast" : ""}`}>
       <div className="background">
 
         <div className="popup-bar">
@@ -132,14 +133,14 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
         )}
 
         <div className="flex gap-4">
-          <div className="flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
+          <div className="drink-pic flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
             <h2 className="text-3xl font-bold my-4">{title}</h2>
               <div className="max-w-[240px] object-contain">
                 <DrinkImage drink={imgName} size={192} fill variant="popup" className="mx-auto" />
               </div>
           </div>
 
-          <div className="flex flex-1 bg-gray-50 rounded p-4 min-w-0">
+          <div className="option-cont flex flex-1 bg-gray-50 rounded p-4 min-w-0">
             <div className="min-w-0 w-fit">
               {loading && <p className="text-center">Loading options...</p>}
               {error && <p className="text-red-600 text-center">Error loading options: {error}</p>}
@@ -150,8 +151,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                 ) : (
                   // Group into Ice, Sweetness, Toppings and then render other categories below
                   (() => {
-                    const iceItems: ModificationItem[] = [];
-                    const sweetItems: ModificationItem[] = [];
+                    let iceItems: ModificationItem[] = [];
+                    let sweetItems: ModificationItem[] = [];
                     const toppingItems: ModificationItem[] = [];
                     const otherGroups: Array<{ cat: string; items: ModificationItem[] }> = [];
 
@@ -198,6 +199,20 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                       });
                     });
 
+                    // Sort items by preferred order
+                    const sortByPreference = (items: ModificationItem[], preference: string[]): ModificationItem[] => {
+                      return items.sort((a, b) => {
+                        const aIndex = preference.findIndex(p => a.name?.toLowerCase().includes(p));
+                        const bIndex = preference.findIndex(p => b.name?.toLowerCase().includes(p));
+                        if (aIndex === -1) return 1;
+                        if (bIndex === -1) return -1;
+                        return aIndex - bIndex;
+                      });
+                    };
+
+                    sweetItems = sortByPreference(sweetItems, ['regular', 'half', 'no sugar']);
+                    iceItems = sortByPreference(iceItems, ['regular', 'less', 'no ice']);
+
                     // Prepare slices to match requested visual counts
                     const iceSlice = iceItems.slice(0, 4);
                     const sweetSlice = sweetItems.slice(0, 4);
@@ -207,7 +222,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                       <div>
                         {/* Three columns: Sweetness | Ice | Toppings */}
                         <div className="grid grid-cols-3 gap-4 mb-2">
-                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Sweetness Level</h2>
                             <div className="flex flex-wrap gap-3 justify-center">
                               {sweetSlice.map((it) => {
@@ -216,7 +231,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -225,7 +240,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Ice Level</h2>
                             <div className="flex flex-wrap gap-3 justify-center">
                               {iceSlice.map((it) => {
@@ -234,7 +249,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>
@@ -243,7 +258,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                             </div>
                           </div>
 
-                          <div className="col-span-1 bg-white rounded p-3 max-w-[350px]">
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">Toppings</h2>
                             <div className="flex flex-wrap gap-3 justify-center">
                               {toppingSlice.map((it) => {
@@ -252,7 +267,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                   <button
                                     key={it.id}
                                     onClick={() => handleSelect(it)}
-                                    className={`w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
                                   </button>

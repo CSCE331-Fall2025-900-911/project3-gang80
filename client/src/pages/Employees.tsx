@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { useContrastMode } from '../contexts/ContrastModeContext';
 import EmployeePopup from "../components/EmployeePopup";
 
 interface User {
@@ -20,6 +21,12 @@ export default function Employees() {
   const [newUserRole, setNewUserRole] = useState<number>(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { resetContrast } = useContrastMode();
+    
+  useEffect(() => {
+    localStorage.removeItem("cartItems");
+    resetContrast(); // ensure contrast is OFF on non-kiosk routes
+  }, []);
 
   useEffect(() => {
     loadUsers();
@@ -127,12 +134,14 @@ export default function Employees() {
       >
         {selectedUser && (
           <>
-            <button
-              className="absolute left-0 top-1/2 -translate-x-full bg-white shadow-lg rounded-l-full px-3 py-2 text-xl font-bold"
-              onClick={() => setDrawerOpen(false)}
-            >
-              &gt;
-            </button>
+            {drawerOpen && (
+              <button
+                className="absolute left-0 top-1/2 -translate-x-full bg-white shadow-lg rounded-l-full px-3 py-2 text-xl font-bold"
+                onClick={() => setDrawerOpen(false)}
+              >
+                &gt;
+              </button>
+            )}
 
             <h2 className="text-2xl font-semibold mb-4">User Details</h2>
 

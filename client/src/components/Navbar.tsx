@@ -46,12 +46,10 @@ function Navbar() {
             Kiosk
           </NavLink>
         </li>
-        <li>
-          <a>
-            <LoginButton />
-          </a>
-        </li>
       </ul>
+      <div className="login-button-container">
+        <LoginButton />
+      </div>
     </nav>
   );
 }

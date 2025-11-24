@@ -1,19 +1,27 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Checkout.css";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+
 
 export default function Cart() {
   // const API_URL = "https://project3-gang80.onrender.com";
   const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
   const navigate = useNavigate();
+  const { highContrast } = useContrastMode();
 
-  const orderType =
-    (location.state as { orderType: string })?.orderType || "unknown";
+  const orderType = (location.state as { orderType: string })?.orderType || "unknown";
 
-  const [cartItems, setCartItems] = useState<
-    Array<{ id?: number; name: string; price: number; quantity: number }>
-  >([]);
+  interface CartItem {
+    id?: number;
+    name: string;
+    price: number;
+    quantity: number;
+    toppings?: Array<{ id: number; name: string; price: number }>;
+  }
+
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
@@ -57,7 +65,7 @@ export default function Cart() {
     try {
       const resp = await fetch(`${API_URL}/api/db/orders/create`, {
         method: "POST",
-        mode: "cors", // ✅ allow CORS
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
         },
@@ -95,7 +103,7 @@ export default function Cart() {
   };
 
   return (
-    <div className="checkout-page">
+    <div className={`checkout-page ${highContrast ? "high-contrast" : ""}`}>
       <h1>Checkout</h1>
       <p>Order type: {orderType}</p>
 
@@ -104,8 +112,12 @@ export default function Cart() {
         <ul>
           {cartItems.map((item, index) => (
             <li key={index}>
-              {item.name} - ${item.price} × {item.quantity} = $
-              {(item.price * item.quantity).toFixed(2)}
+              {item.name} 
+              {item.toppings && item.toppings.length > 0 && (
+                <> + {item.toppings.map(t => t.name).join(", ")}</>
+              )}
+              {" - $"}
+              {item.price.toFixed(2)} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
             </li>
           ))}
         </ul>
