@@ -62,6 +62,10 @@ export default function Orders() {
   const [translatedCategories, setTranslatedCategories] = useState<string[] | null>(null);
   const [translatedDrinkNames, setTranslatedDrinkNames] = useState<Record<number, string>>({});
 
+  const { highContrast, setHighContrast } = useContrastMode();
+
+
+
   // Fetch drinks when category changes
   useEffect(() => {
     let active = true;
@@ -190,7 +194,7 @@ export default function Orders() {
   
 
   return (
-    <div className="orders-layout">
+    <div className={`orders-layout ${highContrast ? "high-contrast" : ""}`}>
       <div className="orders-content">
         {/* Category Bar */}
         {!showPopup && (
@@ -213,7 +217,7 @@ export default function Orders() {
         <div className="accessibility-buttons">
           <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
-          <button className="circle-btn" aria-label="Accessibility option 2"><img src={contrastIcon}></img></button>
+          <button className="circle-btn contrast-btn" aria-label="Accessibility option 2" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon}></img></button>
         </div>
         {/* Drink Grid */}
         <div className="grid-container">

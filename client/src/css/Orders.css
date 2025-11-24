@@ -169,3 +169,193 @@
   cursor: pointer;
   transition: background 0.3s ease;
 }
+
+
+/* HIGH CONSTRAST UI CHANGES */
+.orders-layout.high-contrast {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: rgb(36, 36, 36) !important;
+  margin: auto;
+}
+
+.orders-layout.high-contrast .orders-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
+  overflow-y: auto;
+}
+
+/* Category bar */
+.orders-layout.high-contrast .category-bar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 20px;
+  position: sticky;
+  top: 0;
+  background: rgba(0,0,0,0.08);
+  border: 2px solid #D3191C;
+  z-index: 20;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  margin-bottom: 40px;
+}
+
+/* Category buttons */
+.orders-layout.high-contrast .category-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid #D3191C;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 120ms ease-in-out;
+}
+
+.orders-layout.high-contrast .category-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(16, 24, 40, 0.06);
+}
+
+.orders-layout.high-contrast .category-btn.active {
+  background: #D3191C;
+  color: white;
+  border-color: black;
+}
+
+/* Accessibility buttons */
+.orders-layout.high-contrast .accessibility-buttons {
+  display:flex;
+  gap:12px;
+  position:absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.orders-layout.high-contrast .circle-btn {
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.08);
+  cursor:pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+
+.orders-layout.high-contrast .contrast-btn {
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#D3191C;
+  border:1px solid rgba(0,0,0,0.08);
+  cursor:pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.orders-layout.high-contrast .circle-btn img {
+  width:28px;
+  height:28px;
+  object-fit:contain;
+  pointer-events:none; 
+}
+
+.orders-layout.high-contrast .circle-btn:focus {
+  outline: 3px solid #4c9ffe;
+  outline-offset: 2px;
+}
+
+/* Drink grid */
+.orders-layout.high-contrast .grid-container {
+  display: grid;
+  grid-template-columns: repeat(4, 200px);
+  gap: 20px;
+  justify-content: center;
+}
+
+.orders-layout.high-contrast .grid-item {
+  width: 200px;
+  height: 280px;
+  background: #242424 !important;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Drink buttons */
+.orders-layout.high-contrast .drink-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 225px;
+  background: #242424 !important;
+  border: 2px solid #D3191C;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  text-align: center;
+  padding: 8px;
+  gap: 8px;
+}
+
+.orders-layout.high-contrast .drink-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(16, 24, 40, 0.08);
+  background: white;
+}
+
+.orders-layout.high-contrast.drink-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(16, 24, 40, 0.1);
+}
+
+.orders-layout.high-contrast .drink-tile-img {
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.orders-layout.high-contrast .drink-tile-img img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.orders-layout.high-contrast .drink-tile-name {
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  font-size: 16px;
+}
+
+.orders-layout.high-contrast .view-cart-btn {
+  padding: 12px 24px;
+  background: #D3191C;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
