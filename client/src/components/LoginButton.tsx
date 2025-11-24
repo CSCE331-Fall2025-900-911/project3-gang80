@@ -11,12 +11,14 @@ function LoginButton() {
 
     // Store token securely
     localStorage.setItem("id_token", idToken);
+    window.dispatchEvent(new Event('storage_changed'));
 
-    // Call backend /ali/db/login route using Bearer auth header from localStorage
+    // Call backend /ali/db/login route to verify and set user role
     response = await makeApiCall("/api/db/login", "POST", {});
     if (response && response.user_role) {
       localStorage.setItem("user_role", response.user_role);
       console.log("User role set to:", response.user_role);
+      window.dispatchEvent(new Event('storage_changed'));
   }
 }
 

@@ -16,18 +16,27 @@ export async function makeApiCall(path : string, method : string, request_data :
     try {
       let response_data = {};
       const storedToken = localStorage.getItem("id_token");
-      const resp = await fetch(`${API_URL}${path}`, {
+      // Build fetch options and include a body only when there is request_data
+      // and the HTTP method allows a body (avoid body for GET requests).
+      const fetchOptions: any = {
         method: method,
         headers: {
           "Content-Type": "application/json",
           "Authorization": storedToken ? `Bearer ${storedToken}` : "",
         },
-        body: JSON.stringify(request_data),
-      });
+      };
+
+      if (request_data != null) {
+        fetchOptions.body = JSON.stringify(request_data);
+      }
+
+      const resp = await fetch(`${API_URL}${path}`, fetchOptions);
       if (resp.status === 401){
         //Invalid login token reset/delete current auth
         localStorage.removeItem("id_token");
         localStorage.removeItem("user_role");
+        window.dispatchEvent(new Event('storage_changed'));
+        console.error("Unauthorized: Reset localstorage");
       }
       if (!resp.ok) {
         console.error("Request failed:", resp.status);
