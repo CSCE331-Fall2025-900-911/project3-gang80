@@ -14,10 +14,16 @@ function LoginButton() {
 
     // Call backend /ali/db/login route using Bearer auth header from localStorage
     response = await makeApiCall("/api/db/login", "POST", {});
-    if (response && response.user_role) {
-      localStorage.setItem("user_role", response.user_role);
-      console.log("User role set to:", response.user_role);
-  }
+    // Persist returned identifiers
+    if (response) {
+      if (response.user_id !== undefined) {
+        localStorage.setItem("user_id", String(response.user_id));
+      }
+      if (response.user_role !== undefined) {
+        localStorage.setItem("user_role", String(response.user_role));
+        console.log("User role set to:", response.user_role);
+      }
+    }
 }
 
   function handleClick() {

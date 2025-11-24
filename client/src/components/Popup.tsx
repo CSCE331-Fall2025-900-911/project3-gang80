@@ -135,9 +135,9 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
         <div className="flex gap-4">
           <div className="drink-pic flex flex-col bg-gray-50 rounded p-4 justify-center items-center">
             <h2 className="text-3xl font-bold my-4">{title}</h2>
-            <div className="max-w-[200px] object-contain">
-              <DrinkImage drink={imgName} />
-            </div>
+              <div className="max-w-[240px] object-contain">
+                <DrinkImage drink={imgName} size={192} fill variant="popup" className="mx-auto" />
+              </div>
           </div>
 
           <div className="option-cont flex flex-1 bg-gray-50 rounded p-4 min-w-0">

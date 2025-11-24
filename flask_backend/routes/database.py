@@ -8,6 +8,7 @@ from globals import ORG_ID, SUPERUSER_EMAILS
 from flask_cors import cross_origin
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from decimal import Decimal
 
 
 bp = Blueprint('database', __name__)
@@ -118,6 +119,283 @@ def menu_modifications():
 
         return jsonify({"categories": grouped}), 200
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/menu_items/create', methods=['POST'])
+def create_menu_item():
+    """Create a new non-modification menu item (drink).
+    Expected JSON body:
+    {
+        "name": string,            (required, unique case-insensitive)
+        "price": number|string,    (required, > 0)
+        "category": string,        (required)
+        "description": string|null (optional)
+        "img_name": string|null    (optional)
+        "is_modification": bool    (optional, default false)
+    }
+    """
+    data = request.get_json(silent=True) or {}
+
+    name = (data.get('name') or '').strip()
+    price_raw = data.get('price')
+    category = (data.get('category') or '').strip()
+    description = (data.get('description') or None)
+    img_name = (data.get('img_name') or None)
+    is_modification = bool(data.get('is_modification', False))
+
+    # Basic validation
+    if not name:
+        return jsonify({"error": "'name' is required"}), 400
+    if not category:
+        return jsonify({"error": "'category' is required"}), 400
+    if price_raw is None:
+        return jsonify({"error": "'price' is required"}), 400
+    try:
+        price_val = Decimal(str(price_raw))
+    except Exception:
+        return jsonify({"error": "'price' must be numeric"}), 400
+    if price_val <= 0:
+        return jsonify({"error": "'price' must be > 0"}), 400
+
+    # Uniqueness check (case-insensitive)
+    existing = db.session.query(models.MenuItem).filter(models.MenuItem.name.ilike(name)).first()
+    if existing:
+        return jsonify({"error": "Menu item with that name already exists", "id": existing.id}), 409
+
+    try:
+        item = models.MenuItem(
+            name=name,
+            price=price_val,
+            category=category,
+            description=description,
+            img_name=img_name,
+            is_modification=is_modification,
+        )
+        db.session.add(item)
+        db.session.commit()
+        return jsonify({
+            "id": item.id,
+            "name": item.name,
+            "price": float(item.price),
+            "category": item.category,
+            "description": item.description,
+            "img_name": item.img_name,
+            "is_modification": item.is_modification,
+            "message": "Menu item created"
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@bp.route('/menu_items/<int:item_id>/update', methods=['PATCH', 'POST'])
+def update_menu_item(item_id):
+    """Update an existing menu item.
+    Accepts partial fields.
+    Body may include any of:
+    {
+        "name": string (unique case-insensitive),
+        "price": number|string (>0),
+        "category": string,
+        "description": string|null,
+        "img_name": string|null,
+        "is_modification": bool
+    }
+    """
+    data = request.get_json(silent=True) or {}
+
+    item = db.session.query(models.MenuItem).filter_by(id=item_id).first()
+    if not item:
+        return jsonify({"error": "Menu item not found"}), 404
+
+    # Handle name uniqueness
+    if 'name' in data and data['name'] is not None:
+        new_name = str(data['name']).strip()
+        if not new_name:
+            return jsonify({"error": "'name' cannot be empty"}), 400
+        existing = db.session.query(models.MenuItem).filter(models.MenuItem.name.ilike(new_name)).filter(models.MenuItem.id != item_id).first()
+        if existing:
+            return jsonify({"error": "Another item with that name exists", "conflict_id": existing.id}), 409
+        item.name = new_name
+
+    # Price
+    if 'price' in data and data['price'] is not None:
+        try:
+            new_price = Decimal(str(data['price']))
+        except Exception:
+            return jsonify({"error": "'price' must be numeric"}), 400
+        if new_price <= 0:
+            return jsonify({"error": "'price' must be > 0"}), 400
+        item.price = new_price
+
+    # Category
+    if 'category' in data and data['category'] is not None:
+        new_cat = str(data['category']).strip()
+        if not new_cat:
+            return jsonify({"error": "'category' cannot be empty"}), 400
+        item.category = new_cat
+
+    # Description (allow null / blank)
+    if 'description' in data:
+        desc = data['description']
+        item.description = (desc.strip() if isinstance(desc, str) and desc.strip() else None)
+
+    # Image name
+    if 'img_name' in data:
+        img = data['img_name']
+        item.img_name = (img.strip() if isinstance(img, str) and img.strip() else None)
+
+    # is_modification
+    if 'is_modification' in data:
+        item.is_modification = bool(data['is_modification'])
+
+    try:
+        db.session.commit()
+        return jsonify({
+            "id": item.id,
+            "name": item.name,
+            "price": float(item.price),
+            "category": item.category,
+            "description": item.description,
+            "img_name": item.img_name,
+            "is_modification": item.is_modification,
+            "message": "Menu item updated"
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+
+@bp.route('/menu_items/<int:item_id>/delete', methods=['DELETE'])
+def delete_menu_item(item_id):
+    """Hard delete a menu item and any orders containing it.
+    Steps:
+      1. Delete recipe ingredient rows for this menu item.
+      2. Find all orders having at least one JointOrderItem referencing this menu item.
+      3. Delete ALL JointOrderItems belonging to those orders.
+      4. Delete those orders.
+      5. Delete remaining JointOrderItems referencing the menu item (if any).
+      6. Delete the menu item itself.
+    Returns counts of affected orders and order items.
+    WARNING: This permanently removes historical order data.
+    """
+    item = db.session.query(models.MenuItem).filter_by(id=item_id).first()
+    if not item:
+        return jsonify({"error": "Menu item not found"}), 404
+    try:
+        # 1. Delete recipe ingredient rows
+        recipe_deleted = db.session.query(models.JointRecipeIngredient).filter_by(menu_item_id=item_id).delete()
+
+        # 2. Find all orders containing this menu item
+        order_ids = [row.order_id for row in db.session.query(models.JointOrderItem.order_id).filter_by(menu_item_id=item_id).all()]
+
+        orders_deleted = 0
+        order_items_deleted = 0
+        if order_ids:
+            # 3. Delete all joint order items for those orders
+            order_items_deleted += db.session.query(models.JointOrderItem).filter(models.JointOrderItem.order_id.in_(order_ids)).delete(synchronize_session=False)
+            # 4. Delete the orders themselves
+            orders_deleted += db.session.query(models.Order).filter(models.Order.id.in_(order_ids)).delete(synchronize_session=False)
+
+        # 5. Delete any remaining joint order items referencing this menu item (if not covered above)
+        remaining_items_deleted = db.session.query(models.JointOrderItem).filter_by(menu_item_id=item_id).delete()
+        order_items_deleted += remaining_items_deleted
+
+        # 6. Delete the menu item
+        db.session.delete(item)
+
+        # Reset sequences so next inserts continue sequentially from current max(id)
+        # This does NOT fill gaps; only ensures nextval >= MAX(id)+1 if sequence got ahead/behind.
+        try:
+            db.session.flush()  # apply deletions before recalculating max values
+            # menu_items sequence reset
+            db.session.execute(text("SELECT setval(pg_get_serial_sequence('menu_items','id'), COALESCE((SELECT MAX(id) FROM menu_items), 0))"))
+            menu_seq_warning = None
+        except Exception as seq_err:
+            menu_seq_warning = str(seq_err)
+
+        try:
+            # orders sequence reset (only needed if orders were deleted, but safe always)
+            db.session.execute(text("SELECT setval(pg_get_serial_sequence('orders','id'), COALESCE((SELECT MAX(id) FROM orders), 0))"))
+            orders_seq_warning = None
+        except Exception as seq2_err:
+            orders_seq_warning = str(seq2_err)
+
+        db.session.commit()
+        return jsonify({
+            "id": item_id,
+            "message": "Menu item and related orders deleted",
+            "orders_deleted": orders_deleted,
+            "order_items_deleted": order_items_deleted,
+            "recipe_rows_deleted": recipe_deleted,
+            "menu_sequence_reset": menu_seq_warning is None,
+            "menu_sequence_warning": menu_seq_warning,
+            "orders_sequence_reset": orders_seq_warning is None,
+            "orders_sequence_warning": orders_seq_warning
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/menu_items/<int:item_id>/recipe/set', methods=['POST'])
+def set_menu_item_recipe(item_id):
+    """Define (replace) the recipe ingredients for a menu item.
+    Expected body:
+    {
+      "ingredients": [ { "inventory_item_id": int, "quantity_used": int }, ... ]
+    }
+    All existing recipe rows for this menu item will be deleted then replaced.
+    """
+    data = request.get_json(silent=True) or {}
+    ingredients = data.get('ingredients')
+    if ingredients is None or not isinstance(ingredients, list):
+        return jsonify({"error": "'ingredients' must be an array"}), 400
+
+    item = db.session.query(models.MenuItem).filter_by(id=item_id).first()
+    if not item:
+        return jsonify({"error": "Menu item not found"}), 404
+
+    try:
+        # Remove existing recipe rows
+        db.session.query(models.JointRecipeIngredient).filter_by(menu_item_id=item_id).delete()
+
+        # Validate and insert new rows
+        inserted = []
+        for ing in ingredients:
+            inv_id = ing.get('inventory_item_id')
+            qty = ing.get('quantity_used')
+            if inv_id is None or qty is None:
+                return jsonify({"error": "Each ingredient needs inventory_item_id and quantity_used"}), 400
+            try:
+                inv_id = int(inv_id)
+                qty = int(qty)
+            except ValueError:
+                return jsonify({"error": "inventory_item_id and quantity_used must be integers"}), 400
+            if qty <= 0:
+                return jsonify({"error": "quantity_used must be > 0"}), 400
+
+            # Optional: verify inventory item exists
+            inv = db.session.query(models.Inventory).filter_by(id=inv_id).first()
+            if not inv:
+                return jsonify({"error": f"Inventory item {inv_id} not found"}), 404
+
+            row = models.JointRecipeIngredient(
+                menu_item_id=item_id,
+                inventory_item_id=inv_id,
+                quantity_used=qty
+            )
+            db.session.add(row)
+            inserted.append({"inventory_item_id": inv_id, "quantity_used": qty})
+
+        db.session.commit()
+        return jsonify({
+            "menu_item_id": item_id,
+            "ingredients": inserted,
+            "message": "Recipe set"
+        }), 200
+    except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
     
 
