@@ -107,18 +107,12 @@ function Navbar() {
             <NavLink to="/kiosk">Kiosk</NavLink>
           </li>
         )}
-
-        {seeNavButton("login") && (
-          <li>
-            <a>
-              <LoginButton />
-            </a>
-          </li>
-        )}
       </ul>
+      {seeNavButton("login") && (
       <div className="login-button-container">
         <LoginButton />
       </div>
+      )}
     </nav>
   );
 }

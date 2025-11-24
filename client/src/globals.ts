@@ -37,6 +37,7 @@ export async function makeApiCall(path : string, method : string, request_data :
         localStorage.removeItem("user_role");
         window.dispatchEvent(new Event('storage_changed'));
         console.error("Unauthorized: Reset localstorage");
+        alert("Session expired or unauthorized. Please log in.");
       }
       if (!resp.ok) {
         console.error("Request failed:", resp.status);
