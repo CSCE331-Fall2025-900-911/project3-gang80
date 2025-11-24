@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useContext } from "react";
 import { useContrastMode } from "../contexts/ContrastModeContext";
+import { makeApiCall } from "../globals";
 import "../css/Confirmation.css";
 
 interface Order {
@@ -18,24 +18,21 @@ export default function Confirmation() {
     const { highContrast } = useContrastMode();
     const navigate = useNavigate();
     const [latestOrderNumber, setLatestOrderNumber] = useState<number | null>(null);
-    // const API_URL = "https://project3-gang80.onrender.com"; // change to deployed URL in production
-    const API_URL = "http://127.0.0.1:5000";
+
 
     useEffect(() => {
     async function fetchOrders() {
         try {
-        const resp = await fetch(`${API_URL}/api/db/orders`);
-        if (!resp.ok) {
-            console.error("Failed to fetch orders", resp.status);
-            return;
-        }
-        const data: { orders: Order[] } = await resp.json();
+            const data = (await makeApiCall("/api/db/orders", "GET", null)) as
+                | { orders: Order[] }
+                | undefined;
 
-        if (data.orders.length === 0) return;
+            if (!data || !data.orders || data.orders.length === 0) return;
 
-        const latestOrder = data.orders.reduce((prev, curr) =>
-            curr.timestamp > prev.timestamp ? curr : prev
-        );
+            // Find newest order by timestamp
+            const latestOrder = data.orders.reduce((prev, curr) =>
+                curr.timestamp > prev.timestamp ? curr : prev
+            );
 
         setLatestOrderNumber(latestOrder.id);
         } catch (err) {
