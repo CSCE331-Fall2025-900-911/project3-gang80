@@ -1,6 +1,8 @@
 import * as React from "react";
 import IngredientGrid from "../components/IngredientGrid";
 import InventoryPopup from "../components/InventoryPopup";
+import { useContrastMode } from '../contexts/ContrastModeContext';
+import { useEffect } from "react";
 import "../css/Inventory.css";
 import { API_URL } from "../globals";
 
@@ -41,6 +43,12 @@ export default function Inventory() {
   const [inventoryItems, setInventoryItems] = React.useState<Array<{ id?: number; name: string }>>([]);
 
   const totalPrice = cartItems.reduce((total, item) => total + item.quantity * item.price, 0);
+  const { resetContrast } = useContrastMode();
+      
+  useEffect(() => {
+    localStorage.removeItem("cartItems");
+    resetContrast(); // ensure contrast is OFF on non-kiosk routes
+  }, []);
 
   async function handleIngredientClick(name: string) {
     let item;
