@@ -9,6 +9,8 @@ import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
 import { API_URL } from "../globals";
 import DrinkImage from "../components/DrinkImage";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+
 
 interface CartItem {
   id: number;
@@ -55,6 +57,10 @@ export default function Orders() {
 
   const [showPopup, setShowPopup] = React.useState(false);
   const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
+
+  const { highContrast, setHighContrast } = useContrastMode();
+
+
 
   // Fetch drinks when category changes
   useEffect(() => {
@@ -140,7 +146,7 @@ export default function Orders() {
   
 
   return (
-    <div className="orders-layout">
+    <div className={`orders-layout ${highContrast ? "high-contrast" : ""}`}>
       <div className="orders-content">
         {/* Category Bar */}
         {!showPopup && (
@@ -160,7 +166,7 @@ export default function Orders() {
         <div className="accessibility-buttons">
           <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
-          <button className="circle-btn" aria-label="Accessibility option 2"><img src={contrastIcon}></img></button>
+          <button className="circle-btn contrast-btn" aria-label="Accessibility option 2" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon}></img></button>
         </div>
         {/* Drink Grid */}
         <div className="grid-container">
