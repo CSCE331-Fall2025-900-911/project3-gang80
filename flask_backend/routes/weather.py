@@ -9,8 +9,7 @@ def weather():
     LAT = 30.628
     LONG = -96.3344
 
-    temp = int(get_current_temperature(LAT, LONG)) + 20
-
+    temp = int(get_current_temperature(LAT, LONG))
     if temp is None:
         return jsonify({"error": "Could not fetch temperature"}), 500
     
