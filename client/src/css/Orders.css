@@ -6,17 +6,29 @@
   margin: auto;
 }
 
-/* Magnify mode increases base font sizes for readability */
+/* Large text */
 .orders-layout.magnify {
-  font-size: 20px; /* elevate root font size */
+  font-size: 20px; 
+}
+
+.orders-layout.magnify .orders-content {
+  align-items: center;
+}
+
+.orders-layout.magnify .category-bar {
+  justify-content: center;
+}
+
+.orders-layout.magnify .grid-container {
+  justify-content: center;
 }
 
 .orders-layout.magnify .drink-btn {
-  font-size: 1em; /* inherit enlarged root */
+  font-size: 1em; 
 }
 
 .orders-layout.magnify .drink-tile-name {
-  font-size: 18px;
+  font-size: 1.2rem;
 }
 
 .orders-layout.magnify .category-btn {
@@ -25,10 +37,9 @@
 }
 
 .orders-layout.magnify .view-cart-btn {
-  font-size: 18px;
+  font-size: 20px;
 }
 
-/* Optional visual state for active magnify button */
 .circle-btn.active {
   border-color: #D3191C;
   box-shadow: 0 0 0 3px rgba(211,25,28,0.25);
@@ -85,6 +96,7 @@
   flex-direction: column;
   align-items: center;
   padding-top: 40px;
+  padding-left: 60px;
   overflow-y: auto;
 }
 
@@ -259,6 +271,7 @@
   flex-direction: column;
   align-items: center;
   padding-top: 40px;
+  padding-left: 60px;
   overflow-y: auto;
 }
 

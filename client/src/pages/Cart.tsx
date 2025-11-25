@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 import "../css/Cart.css";
 //import { API_URL } from "../globals";
 import { useContrastMode } from "../contexts/ContrastModeContext";
+import { useMagnifyMode } from "../contexts/MagnifyModeContext";
+import { useMagnifier } from "../hooks/useMagnifier";
+import { MagnifierLens } from "../components/MagnifierLens";
 import { useTranslation } from "../contexts/TranslationContext";
 
 
@@ -33,6 +36,8 @@ export default function Cart() {
   const [menuMap, setMenuMap] = useState<Record<number, string>>({});
 
   const { highContrast } = useContrastMode();
+  const { magnifyMode, useLens } = useMagnifyMode();
+  const { lensPos, lensText, lensImageSrc, lensImageAlt, handleMouseMove } = useMagnifier();
   const { language, translate, t } = useTranslation();
   const [translatedMenuMap, setTranslatedMenuMap] = useState<Record<number, string>>({});
   const [translatedStatics, setTranslatedStatics] = useState<Record<string, string>>({});
@@ -134,7 +139,7 @@ export default function Cart() {
   }
 
   return (
-    <div className={`cart-page ${highContrast ? "high-contrast" : ""}`}>
+    <div className={`cart-page ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
       <h1>{translatedStatics['Cart'] ?? t('Cart')}</h1>
       <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
       {cartItems.length === 0 ? (<p>Your cart is empty.</p>) : (
@@ -164,6 +169,14 @@ export default function Cart() {
           <button className="checkout-btn" onClick={handleCheckout}>{translatedStatics['Checkout'] ?? t('Checkout')}</button>
        
         </div>
+      <MagnifierLens 
+        lensPos={lensPos}
+        lensText={lensText}
+        lensImageSrc={lensImageSrc}
+        lensImageAlt={lensImageAlt}
+        magnifyMode={magnifyMode}
+        useLens={useLens}
+      />
     </div>
   );
 }
