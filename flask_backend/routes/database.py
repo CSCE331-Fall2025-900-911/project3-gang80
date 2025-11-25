@@ -52,6 +52,7 @@ def get_items():
 
 
 @bp.route('/menu_items_by_category', methods=['GET'])
+@require_roles(Roles.CUSTOMER, Roles.EMPLOYEE, Roles.MANAGER, Roles.KIOSK)
 def menu_items_by_category():
     """Return non-modification menu items (drinks) for a given category.
     Query param: category=<string>

@@ -14,11 +14,11 @@ export async function makeApiCall(path : string, method : string, request_data :
      * @returns Response data from the backend
     */
     try {
-    let response_data = {};
-    const storedToken = localStorage.getItem("id_token");
+      let response_data = {};
+      const storedToken = localStorage.getItem("id_token");
 
-    const fetchOptions: RequestInit = {
-      method,
+      const fetchOptions: RequestInit = {
+      method: method,
       headers: {
         "Content-Type": "application/json",
         "Authorization": storedToken ? `Bearer ${storedToken}` : "",
@@ -29,24 +29,26 @@ export async function makeApiCall(path : string, method : string, request_data :
     if (method !== "GET" && request_data !== null) {
       fetchOptions.body = JSON.stringify(request_data);
     }
-
-    const resp = await fetch(`${API_URL}${path}`, fetchOptions);
-
-    if (resp.status === 401) {
-      localStorage.removeItem("id_token");
-      localStorage.removeItem("user_role");
+    
+      const resp = await fetch(`${API_URL}${path}`, fetchOptions);
+      if (resp.status === 401){
+        //Invalid login token reset/delete current auth
+        localStorage.removeItem("id_token");
+        localStorage.removeItem("user_role");
+        window.dispatchEvent(new Event('storage_changed'));
+        console.error("Unauthorized: Reset localstorage");
+        alert("Session expired or unauthorized. Please log in.");
+      }
+      if (!resp.ok) {
+        console.error("Request failed:", resp.status);
+        return null;
+      }
+      else {
+        response_data = await resp.json();
+        console.log("Backend", path, " response:", response_data);
+        return response_data;
+      }
+    } catch (err) {
+      console.error("Error calling backend:", err);
     }
-
-    if (!resp.ok) {
-      console.error("Request failed:", resp.status);
-      return null;
-    }
-
-    response_data = await resp.json();
-    console.log("Backend", path, "response:", response_data);
-    return response_data;
-
-  } catch (err) {
-    console.error("Error calling backend:", err);
-  }
 }
