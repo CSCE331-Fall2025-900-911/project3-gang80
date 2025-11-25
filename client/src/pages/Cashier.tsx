@@ -4,6 +4,7 @@ import CashierPopup from "../components/CashierPopup";
 import AddDrinkPopup from "../components/AddDrinkPopup";
 import EditDrinkPopup from "../components/EditDrinkPopup";
 import { useContrastMode } from '../contexts/ContrastModeContext';
+import { makeApiCall } from "../globals";
 
 
 export default function Cashier() {
@@ -49,8 +50,6 @@ export default function Cashier() {
 		"Non-Caffeinated",
 	];
 
-	const API_BASE = (import.meta.env.VITE_API_BASE as string) || '';
-
 	useEffect(() => {
 		let cancelled = false;
 		async function loadAll() {
@@ -59,9 +58,7 @@ export default function Cashier() {
 			try {
 				const results = await Promise.all(
 					CATEGORIES.map(async (cat) => {
-						const resp = await fetch(`${API_BASE}/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`);
-						if (!resp.ok) throw new Error(`Failed ${cat}: ${resp.status}`);
-						const data = await resp.json();
+						const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
 						return (data.items || []).map((d: any) => ({
 							id: d.id,
 							name: d.name,
@@ -136,16 +133,7 @@ export default function Cashier() {
 				items,
 			};
 
-			const resp = await fetch(`${API_BASE}/api/db/orders/create`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(payload),
-			});
-
-			if (!resp.ok) {
-				const txt = await resp.text();
-				throw new Error(`Charge failed (${resp.status}): ${txt}`);
-			}
+			await makeApiCall('/api/db/orders/create', 'POST', payload);
 
 			// Successful order and clear cart
 			setCartItems([]);
@@ -315,31 +303,28 @@ export default function Cashier() {
 					onClose={() => { setEditDrinkOpen(false); setEditingDrink(null); }}
 					onUpdated={() => {
 						(async () => {
-							try {
-								const results = await Promise.all(
-									CATEGORIES.map(async (cat) => {
-										const resp = await fetch(`${API_BASE}/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`);
-										if (!resp.ok) throw new Error(`Failed ${cat}: ${resp.status}`);
-										const data = await resp.json();
-										return (data.items || []).map((d: any) => ({
-											id: d.id,
-											name: d.name,
-											price: d.price,
-											category: d.category,
-											img_name: d.img_name,
-											description: d.description,
-										}));
-									})
-								);
-								setItems(results.flat());
-							} catch (e:any) {
-								console.error('Reload failed', e);
+						try {
+							const results = await Promise.all(
+								CATEGORIES.map(async (cat) => {
+									const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
+									return (data.items || []).map((d: any) => ({
+										id: d.id,
+										name: d.name,
+										price: d.price,
+										category: d.category,
+										img_name: d.img_name,
+										description: d.description,
+									}));
+								})
+							);
+							setItems(results.flat());
+						} catch (e:any) {
+							console.error('Reload failed', e);
 							}
 						})();
 					}}
-					categories={CATEGORIES}
-					apiBase={API_BASE}
-					item={editingDrink}
+				categories={CATEGORIES}
+				item={editingDrink}
 				/>
 			)}
 
@@ -348,31 +333,28 @@ export default function Cashier() {
 					onClose={() => setAddDrinkOpen(false)}
 					onCreated={() => {
 						(async () => {
-							try {
-								const results = await Promise.all(
-									CATEGORIES.map(async (cat) => {
-										const resp = await fetch(`${API_BASE}/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`);
-										if (!resp.ok) throw new Error(`Failed ${cat}: ${resp.status}`);
-										const data = await resp.json();
-										return (data.items || []).map((d: any) => ({
-											id: d.id,
-											name: d.name,
-											price: d.price,
-											category: d.category,
-											img_name: d.img_name,
-										}));
-									})
-								);
-								setItems(results.flat());
-							} catch (e:any) {
-								console.error('Reload failed', e);
-							}
-						})();
-					}}
-					categories={CATEGORIES}
-					apiBase={API_BASE}
-				/>
-			)}
-		</>
-	);
+						try {
+							const results = await Promise.all(
+								CATEGORIES.map(async (cat) => {
+									const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
+									return (data.items || []).map((d: any) => ({
+										id: d.id,
+										name: d.name,
+										price: d.price,
+										category: d.category,
+										img_name: d.img_name,
+									}));
+								})
+							);
+							setItems(results.flat());
+} catch (e:any) {
+console.error('Reload failed', e);
+}
+})();
+}}
+categories={CATEGORIES}
+/>
+)}
+</>
+);
 }
