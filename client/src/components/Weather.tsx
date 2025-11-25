@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchTemperature } from "../weatherApi";
+import "../css/Weather.css";
 
 export default function Weather() {
     const [temperature, setTemperature] = useState<number | null>(null);
@@ -20,9 +21,12 @@ export default function Weather() {
     }
 
     return (
-        <div>
-            <h2>Current Temperature</h2>
-            <p>{temperature}°F</p>
+        <div className={temperature < 50
+        ? "weather-background-cold"
+        : temperature < 80
+            ? "weather-background-mild"
+            : "weather-background-hot"}>
+            <h2>{temperature}°F</h2>
         </div>
     );
 }
