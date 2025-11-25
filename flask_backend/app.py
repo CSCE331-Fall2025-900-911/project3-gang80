@@ -48,4 +48,6 @@ def translate_health():
     return {'translate_key_set': False, 'message': 'TRANSLATE_API_KEY not set in environment'}, 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render provides PORT
+    app.run(host="0.0.0.0", port=port, debug=False)
+
