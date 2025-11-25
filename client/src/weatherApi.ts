@@ -1,5 +1,5 @@
 export async function fetchTemperature(): Promise<number> {
-    const response = await fetch("http://localhost:5000/api/weather");
+    const response = await fetch("https://project3-gang80.onrender.com/api/weather");
 
     if (!response.ok) {
         throw new Error("Failed to fetch temperature");

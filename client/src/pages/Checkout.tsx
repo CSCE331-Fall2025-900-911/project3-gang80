@@ -9,8 +9,8 @@ import { useTranslation } from "../contexts/TranslationContext";
 
 
 export default function Cart() {
-  // const API_URL = "https://project3-gang80.onrender.com";
-  const API_URL = "http://127.0.0.1:5000";
+  const API_URL = "https://project3-gang80.onrender.com";
+  //const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const { highContrast } = useContrastMode();

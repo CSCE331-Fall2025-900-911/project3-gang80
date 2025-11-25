@@ -29,8 +29,8 @@ interface CartItem {
 }
 
 export default function Orders() {
-  //const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
-  const API_URL = "http://127.0.0.1:5000";
+  const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
+  //const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
   const orderType = (location.state as { orderType: string })?.orderType || "unknown";
   const [selected, setSelected] = useState<string>("Milk Tea");

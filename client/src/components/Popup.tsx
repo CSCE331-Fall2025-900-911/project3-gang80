@@ -43,7 +43,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   useEffect(() => {
     // Fetch modification items grouped by category from backend
     // Assumption: backend runs on localhost:5000 during local development
-    fetch("http://127.0.0.1:5000/api/db/menu_modifications")
+    fetch("https://project3-gang80.onrender.com/api/db/menu_modifications")
       .then((res) => {
         if (!res.ok) throw new Error(`Status ${res.status}`);
         return res.json();
