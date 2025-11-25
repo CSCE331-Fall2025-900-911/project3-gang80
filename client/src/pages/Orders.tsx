@@ -9,8 +9,10 @@ import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
 import { API_URL } from "../globals";
 import DrinkImage from "../components/DrinkImage";
-import { useContrastMode } from "../contexts/ContrastModeContext";
-
+import LanguageSelector from '../components/LanguageSelector';
+import { useTranslation } from '../contexts/TranslationContext';
+import { useContrastMode } from '../contexts/ContrastModeContext';
+import Weather from "../components/Weather";
 
 interface CartItem {
   id: number;
@@ -57,6 +59,10 @@ export default function Orders() {
 
   const [showPopup, setShowPopup] = React.useState(false);
   const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
+  const [showLangSelector, setShowLangSelector] = React.useState(false);
+  const { language, translate } = useTranslation();
+  const [translatedCategories, setTranslatedCategories] = useState<string[] | null>(null);
+  const [translatedDrinkNames, setTranslatedDrinkNames] = useState<Record<number, string>>({});
 
   const { highContrast, setHighContrast } = useContrastMode();
   const [magnifyMode, setMagnifyMode] = useState(false);
@@ -93,6 +99,50 @@ export default function Orders() {
       active = false;
     };
   }, [selected]);
+
+  // Translate category labels when language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en') {
+        setTranslatedCategories(null);
+        return;
+      }
+      try {
+        const results = await Promise.all(drinkCategories.map((c) => translate(c)));
+        if (mounted) setTranslatedCategories(results);
+      } catch (err) {
+        console.error('Category translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [language]);
+
+  // Translate drink names when drinks list or language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en' || drinks.length === 0) {
+        setTranslatedDrinkNames({});
+        return;
+      }
+      try {
+        const pairs = await Promise.all(drinks.map(async (d) => {
+          const tn = await translate(d.name);
+          return { id: d.id, name: tn };
+        }));
+        if (!mounted) return;
+        const map: Record<number, string> = {};
+        pairs.forEach((p) => { map[p.id] = p.name; });
+        setTranslatedDrinkNames(map);
+      } catch (err) {
+        console.error('Drink translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [drinks, language]);
 
   const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     setSelectedDrink(drink);
@@ -187,20 +237,23 @@ export default function Orders() {
         {/* Category Bar */}
         {!showPopup && (
         <div className="category-bar">
-          {drinkCategories.map((s) => (
-            <button
-              key={s}
-              className={`category-btn ${s === selected ? "active" : ""}`}
-              onClick={() => setSelected(s)}
-            >
-              {s}
-            </button>
-          ))}
+          {drinkCategories.map((s, idx) => {
+            const label = (translatedCategories && translatedCategories[idx]) ? translatedCategories[idx] : s;
+            return (
+              <button
+                key={s}
+                className={`category-btn ${s === selected ? "active" : ""}`}
+                onClick={() => setSelected(s)}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
         )}
 
         <div className="accessibility-buttons">
-          <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon} /></button>
+          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} /></button>
           <button
             className={`circle-btn ${magnifyMode ? 'active' : ''}`}
             aria-label="Enable text magnification"
@@ -220,8 +273,8 @@ export default function Orders() {
               title={d.description || d.name}
               onClick={() => handleOpenPopup(d)}
             >
-              <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} size={140} /></div>
-              <div className="drink-tile-name">{d.name}</div>
+              <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} size={140}/></div>
+              <div className="drink-tile-name">{translatedDrinkNames[d.id] ?? d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
             </button>
           ))}
@@ -235,12 +288,13 @@ export default function Orders() {
           />
         )}
 
-          {drinks.length === 0 && (
-            <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
-              No items found.
-            </div>
-          )}
+        {drinks.length === 0 && (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
+            No items found.
+          </div>
+        )}
         </div>
+        {showLangSelector && <LanguageSelector onClose={() => setShowLangSelector(false)} />}
         {magnifyMode && (
           <div
             className="magnifier-lens"
@@ -262,6 +316,9 @@ export default function Orders() {
             Go to Cart ({totalCartItems})
           </button>
         </div>
+      </div>
+      <div>
+        <Weather />
       </div>
     </div>
   );
