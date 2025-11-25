@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useContrastMode } from '../contexts/ContrastModeContext';
 import EmployeePopup from "../components/EmployeePopup";
+import { makeApiCall } from "../globals";
 
 interface User {
   id: number;
@@ -13,8 +14,6 @@ interface User {
 }
 
 export default function Employees() {
-  //const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
-  const API_URL = "http://127.0.0.1:5000";
   const [managers, setManagers] = useState<User[]>([]);
   const [employees, setEmployees] = useState<User[]>([]);
   const [showPopup, setShowPopup] = useState(false);
@@ -34,9 +33,8 @@ export default function Employees() {
 
   async function loadUsers() {
     try {
-      const resp = await fetch(`${API_URL}/api/db/users`);
-      const data = await resp.json();
-      const users: User[] = data.users || [];
+      const data = await makeApiCall("/api/db/users", "GET", null) as { users: User[]};
+      const users: User[] = data?.users || [];
       setManagers(users.filter((u) => u.role === 2));
       setEmployees(users.filter((u) => u.role === 1));
     } catch (err) {
@@ -45,16 +43,11 @@ export default function Employees() {
   }
 
   async function addUser(newUser: any) {
-    const resp = await fetch(`${API_URL}/api/db/users/create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newUser)
-    });
+    const resp = await makeApiCall("/api/db/users/create", "POST", newUser);
 
-    if (resp.ok) {
+    if (resp) {
       await loadUsers();
       setShowPopup(false);
-
     } else {
       console.error("failed to add user");
     }
@@ -63,11 +56,9 @@ export default function Employees() {
   async function handleDeleteUser(id: number) {
     if (!confirm("Are you sure you want to delete this user?")) return;
 
-    const resp = await fetch(`${API_URL}/api/db/users/${id}/delete`, {
-      method: "DELETE"
-    });
+    const resp = await makeApiCall(`/api/db/users/${id}/delete`, "DELETE", null);
 
-    if (resp.ok) {
+    if (resp) {
       await loadUsers();
       setDrawerOpen(false);
       setSelectedUser(null);

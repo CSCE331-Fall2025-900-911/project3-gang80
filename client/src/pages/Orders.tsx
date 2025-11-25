@@ -12,6 +12,7 @@ import DrinkImage from "../components/DrinkImage";
 import LanguageSelector from '../components/LanguageSelector';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useContrastMode } from '../contexts/ContrastModeContext';
+import Weather from "../components/Weather";
 
 interface CartItem {
   id: number;
@@ -244,11 +245,11 @@ export default function Orders() {
           />
         )}
 
-          {drinks.length === 0 && (
-            <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
-              No items found.
-            </div>
-          )}
+        {drinks.length === 0 && (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
+            No items found.
+          </div>
+        )}
         </div>
         {showLangSelector && <LanguageSelector onClose={() => setShowLangSelector(false)} />}
         <div>
@@ -260,6 +261,9 @@ export default function Orders() {
             Go to Cart ({totalCartItems})
           </button>
         </div>
+      </div>
+      <div>
+        <Weather />
       </div>
     </div>
   );

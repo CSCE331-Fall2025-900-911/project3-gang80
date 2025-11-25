@@ -16,20 +16,20 @@ export async function makeApiCall(path : string, method : string, request_data :
     try {
       let response_data = {};
       const storedToken = localStorage.getItem("id_token");
-      // Build fetch options and include a body only when there is request_data
-      // and the HTTP method allows a body (avoid body for GET requests).
-      const fetchOptions: any = {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": storedToken ? `Bearer ${storedToken}` : "",
-        },
-      };
 
-      if (request_data != null) {
-        fetchOptions.body = JSON.stringify(request_data);
-      }
+      const fetchOptions: RequestInit = {
+      method: method,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": storedToken ? `Bearer ${storedToken}` : "",
+      },
+    };
 
+    // Only attach body for non-GET requests
+    if (method !== "GET" && request_data !== null) {
+      fetchOptions.body = JSON.stringify(request_data);
+    }
+    
       const resp = await fetch(`${API_URL}${path}`, fetchOptions);
       if (resp.status === 401){
         //Invalid login token reset/delete current auth
@@ -41,13 +41,14 @@ export async function makeApiCall(path : string, method : string, request_data :
       }
       if (!resp.ok) {
         console.error("Request failed:", resp.status);
+        return null;
       }
       else {
         response_data = await resp.json();
-        console.log("Backend ", path, " response: ", response_data);
+        console.log("Backend", path, " response:", response_data);
         return response_data;
       }
     } catch (err) {
-      console.error("Error calling backend login:", err);
+      console.error("Error calling backend:", err);
     }
 }
