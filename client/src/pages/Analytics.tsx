@@ -1,5 +1,4 @@
 import { useContrastMode } from '../contexts/ContrastModeContext';
-import * as React from "react";
 import { useEffect } from "react";
 
 function Analytics() {
