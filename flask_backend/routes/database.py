@@ -4,6 +4,7 @@ import models
 from helpers.permissions import Roles, require_roles
 from sqlalchemy import text
 from datetime import datetime
+from decimal import Decimal
 from globals import ORG_ID, SUPERUSER_EMAILS, TRANSLATE_API_KEY
 from flask_cors import cross_origin
 from google.oauth2 import id_token
