@@ -7,7 +7,7 @@ import "../css/Orders.css";
 import languageIcon from '../assets/language.png';
 import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
-import { API_URL } from "../globals";
+// import { API_URL } from "../globals";
 import DrinkImage from "../components/DrinkImage";
 import { MagnifierLens } from "../components/MagnifierLens";
 import MagnifyToggle from "../components/MagnifyToggle";
