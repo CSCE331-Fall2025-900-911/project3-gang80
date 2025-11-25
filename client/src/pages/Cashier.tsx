@@ -175,13 +175,16 @@ export default function Cashier() {
 									className="relative group cursor-pointer bg-[#f3f3f3] border border-[#d0d5dd] rounded-lg min-h-44 w-full flex flex-col items-center px-2 pt-2 pb-3 shadow-sm transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-600 overflow-hidden"
 									title={item.name}
 								>
-									<button
+									<div
 										onClick={(e) => { e.stopPropagation(); setEditingDrink(item); setEditDrinkOpen(true); }}
 										className="absolute top-1 right-1 px-2 py-1 text-[10px] leading-none bg-white border border-gray-300 rounded shadow cursor-pointer hover:bg-gray-50 active:scale-[0.95]"
+										role="button"
+										tabIndex={0}
+										onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setEditingDrink(item); setEditDrinkOpen(true); } }}
 										aria-label={`Edit ${item.name}`}
 									>
 										Edit
-									</button>
+									</div>
 									<div className="flex items-center justify-center h-32 w-full overflow-hidden px-2">
 										{item.img_name ? (
 											<DrinkImage drink={item.img_name} size={220} fill className="object-contain" />
