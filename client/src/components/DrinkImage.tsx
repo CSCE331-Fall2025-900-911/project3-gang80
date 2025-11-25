@@ -43,11 +43,37 @@ const images : Record<string, string> = {
   peachTeaLycheeJelly: peachTeaImg,
 };
 
-function DrinkImage({ drink }: { drink: string }) {
-  console.log("imgName passed to Popup:", drink);
-  console.log("images keys:", Object.keys(images));
-  console.log("resolved src:", images[drink]);
-  return <img src={images[drink]} alt={drink} className="w-48"/>;
+interface DrinkImageProps {
+  drink: string;
+  size?: number; 
+  variant?: 'popup' | 'cashier';
+  fill?: boolean; 
+  className?: string;
+}
+
+function DrinkImage({ drink, size, variant = 'popup', fill = false, className = "" }: DrinkImageProps) {
+  const defaultSize = variant === 'cashier' ? 64 : 48;
+  const resolvedSize = size ?? defaultSize;
+  const src = images[drink];
+  if (!src) {
+    const placeholderStyle = fill
+      ? { maxWidth: resolvedSize, maxHeight: '100%', width: 'auto' as const, height: '100%' as const }
+      : { width: resolvedSize, height: resolvedSize };
+    return (
+      <div
+        style={placeholderStyle}
+        className={`bg-gray-200 rounded flex items-center justify-center text-[10px] text-gray-600 ${className}`}
+      >
+        N/A
+      </div>
+    );
+  }
+
+  const imgStyle = fill
+    ? { maxWidth: resolvedSize, maxHeight: '100%', width: 'auto' as const, height: '100%' as const }
+    : { width: resolvedSize, height: resolvedSize };
+
+  return <img src={src} alt={drink} style={imgStyle} className={`object-contain ${className}`} />;
 }
 
 export default DrinkImage;

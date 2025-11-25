@@ -3,3 +3,7 @@
 .app-container {
   display: flex;
 }
+
+.high-contrast .app-container {
+  background: #242424 !important;
+}

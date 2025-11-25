@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useContrastMode } from "../contexts/ContrastModeContext";
+import { useMagnifyMode } from "../contexts/MagnifyModeContext";
+import { useMagnifier } from "../hooks/useMagnifier";
+import { MagnifierLens } from "../components/MagnifierLens";
+import { makeApiCall } from "../globals";
+import "../css/Confirmation.css";
 
 interface Order {
     id: number;
@@ -12,25 +18,26 @@ interface Order {
 }
 
 export default function Confirmation() {
+    const { highContrast } = useContrastMode();
+    const { magnifyMode, useLens } = useMagnifyMode();
+    const { lensPos, lensText, lensImageSrc, lensImageAlt, handleMouseMove } = useMagnifier();
     const navigate = useNavigate();
     const [latestOrderNumber, setLatestOrderNumber] = useState<number | null>(null);
-    const API_URL = "https://project3-gang80.onrender.com"; // change to deployed URL in production
+
 
     useEffect(() => {
     async function fetchOrders() {
         try {
-        const resp = await fetch(`${API_URL}/api/db/orders`);
-        if (!resp.ok) {
-            console.error("Failed to fetch orders", resp.status);
-            return;
-        }
-        const data: { orders: Order[] } = await resp.json();
+            const data = (await makeApiCall("/api/db/orders", "GET", null)) as
+                | { orders: Order[] }
+                | undefined;
 
-        if (data.orders.length === 0) return;
+            if (!data || !data.orders || data.orders.length === 0) return;
 
-        const latestOrder = data.orders.reduce((prev, curr) =>
-            curr.timestamp > prev.timestamp ? curr : prev
-        );
+            // Find newest order by timestamp
+            const latestOrder = data.orders.reduce((prev, curr) =>
+                curr.timestamp > prev.timestamp ? curr : prev
+            );
 
         setLatestOrderNumber(latestOrder.id);
         } catch (err) {
@@ -42,7 +49,7 @@ export default function Confirmation() {
     }, []);
 
     return (
-        <div className="absolute top-0 w-[calc(100%-250px)] h-screen flex flex-col items-center justify-center text-center gap-6">
+        <div className={`confirmation-page absolute top-0 w-[calc(100%-250px)] h-screen flex flex-col items-center justify-center text-center gap-6 ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
             <h1 className="text-3xl font-bold">Order confirmed!</h1>
             <h2 className="text-xl">Order Number: {latestOrderNumber ?? "Loading..."}</h2>
             <button
@@ -51,6 +58,14 @@ export default function Confirmation() {
             >
                 Order More
             </button>
+            <MagnifierLens 
+                lensPos={lensPos}
+                lensText={lensText}
+                lensImageSrc={lensImageSrc}
+                lensImageAlt={lensImageAlt}
+                magnifyMode={magnifyMode}
+                useLens={useLens}
+            />
         </div>
     );
 }
