@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { makeApiCall } from "../globals";
 
 interface EditDrinkPopupProps {
   onClose: () => void;
   onUpdated: () => void;
   categories: string[];
-  apiBase: string;
   item: {
     id: number;
     name: string;
@@ -15,7 +15,7 @@ interface EditDrinkPopupProps {
   };
 }
 
-export default function EditDrinkPopup({ onClose, onUpdated, categories, apiBase, item }: EditDrinkPopupProps) {
+export default function EditDrinkPopup({ onClose, onUpdated, categories, item }: EditDrinkPopupProps) {
   const [name, setName] = useState(item.name);
   const [price, setPrice] = useState(String(item.price));
   const [category, setCategory] = useState(item.category);
@@ -33,21 +33,13 @@ export default function EditDrinkPopup({ onClose, onUpdated, categories, apiBase
     if (Number.isNaN(numericPrice) || numericPrice <= 0) { setError("Valid price required"); return; }
     setSubmitting(true);
     try {
-      const resp = await fetch(`${apiBase}/api/db/menu_items/${item.id}/update`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          price: numericPrice,
-          category,
-          description: description.trim() || null,
-          img_name: imgName.trim() || null,
-        })
+      await makeApiCall(`/api/db/menu_items/${item.id}/update`, 'PATCH', {
+        name: name.trim(),
+        price: numericPrice,
+        category,
+        description: description.trim() || null,
+        img_name: imgName.trim() || null,
       });
-      if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(txt || `Status ${resp.status}`);
-      }
       onUpdated();
       onClose();
     } catch (err: any) {
@@ -64,13 +56,7 @@ export default function EditDrinkPopup({ onClose, onUpdated, categories, apiBase
     setError(null);
     setDeleting(true);
     try {
-      const resp = await fetch(`${apiBase}/api/db/menu_items/${item.id}/delete`, {
-        method: 'DELETE'
-      });
-      if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(txt || `Status ${resp.status}`);
-      }
+      await makeApiCall(`/api/db/menu_items/${item.id}/delete`, 'DELETE', null);
       onUpdated();
       onClose();
     } catch (err: any) {

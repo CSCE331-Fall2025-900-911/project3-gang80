@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
+import { makeApiCall } from "../globals";
 
 interface AddDrinkPopupProps {
   onClose: () => void;
   onCreated: () => void;
   categories: string[];
-  apiBase: string;
 }
 
-export default function AddDrinkPopup({ onClose, onCreated, categories, apiBase }: AddDrinkPopupProps) {
+export default function AddDrinkPopup({ onClose, onCreated, categories }: AddDrinkPopupProps) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState(categories[0] || "");
@@ -24,14 +24,11 @@ export default function AddDrinkPopup({ onClose, onCreated, categories, apiBase 
     // Fetch inventory for ingredient selection
     (async () => {
       try {
-        const resp = await fetch(`${apiBase}/api/db/inventory`);
-        if (resp.ok) {
-          const data = await resp.json();
-            setInventory((data.inventory || []).map((i: any) => ({ id: i.id, name: i.name })));
-        }
+        const data = await makeApiCall('/api/db/inventory', 'GET', null) as { inventory: any[] };
+        setInventory((data.inventory || []).map((i: any) => ({ id: i.id, name: i.name })));
       } catch {}
     })();
-  }, [apiBase]);
+  }, []);
 
   function addIngredientRow() {
     setIngredients(prev => [...prev, { inventory_item_id: null, quantity_used: "" }]);
@@ -55,23 +52,14 @@ export default function AddDrinkPopup({ onClose, onCreated, categories, apiBase 
     setSubmitting(true);
     try {
       // Create menu item first
-      const resp = await fetch(`${apiBase}/api/db/menu_items/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          price: numericPrice,
-          category,
-          description: description.trim() || null,
-          img_name: imgName.trim() || null,
-          is_modification: false,
-        })
-      });
-      if (!resp.ok) {
-        const txt = await resp.text();
-        throw new Error(txt || `Status ${resp.status}`);
-      }
-      const created = await resp.json();
+      const created = await makeApiCall('/api/db/menu_items/create', 'POST', {
+        name: name.trim(),
+        price: numericPrice,
+        category,
+        description: description.trim() || null,
+        img_name: imgName.trim() || null,
+        is_modification: false,
+      }) as { id: number };
       const newId = created.id;
 
       // Prepare recipe ingredients: filter valid rows
@@ -84,15 +72,7 @@ export default function AddDrinkPopup({ onClose, onCreated, categories, apiBase 
         .filter(r => r.quantity_used > 0);
 
       if (validIngredients.length > 0) {
-        const recipeResp = await fetch(`${apiBase}/api/db/menu_items/${newId}/recipe/set`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ingredients: validIngredients })
-        });
-        if (!recipeResp.ok) {
-          const txt = await recipeResp.text();
-          throw new Error(`Recipe set failed: ${txt || recipeResp.status}`);
-        }
+        await makeApiCall(`/api/db/menu_items/${newId}/recipe/set`, 'POST', { ingredients: validIngredients });
       }
 
       onCreated();
