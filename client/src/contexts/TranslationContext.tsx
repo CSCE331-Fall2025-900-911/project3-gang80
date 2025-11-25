@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useRef } from 'react';
 import { API_URL } from '../globals';
 
-type Translations = Record<string, string>;
+//type Translations = Record<string, string>;
 
 interface TranslationContextValue {
   language: string;
