@@ -9,9 +9,13 @@ import magnifyIcon from '../assets/magnify.png';
 import contrastIcon from '../assets/contrast.png';
 import { API_URL } from "../globals";
 import DrinkImage from "../components/DrinkImage";
+import { MagnifierLens } from "../components/MagnifierLens";
+import MagnifyToggle from "../components/MagnifyToggle";
 import LanguageSelector from '../components/LanguageSelector';
 import { useTranslation } from '../contexts/TranslationContext';
 import { useContrastMode } from '../contexts/ContrastModeContext';
+import { useMagnifyMode } from '../contexts/MagnifyModeContext';
+import { useMagnifier } from '../hooks/useMagnifier';
 import Weather from "../components/Weather";
 
 interface CartItem {
@@ -65,6 +69,9 @@ export default function Orders() {
   const [translatedDrinkNames, setTranslatedDrinkNames] = useState<Record<number, string>>({});
 
   const { highContrast, setHighContrast } = useContrastMode();
+  const { magnifyMode, useLens, setMagnifyMode } = useMagnifyMode();
+  const { lensPos, lensText, lensImageSrc, lensImageAlt, handleMouseMove } = useMagnifier();
+  const [showMagnifyToggle, setShowMagnifyToggle] = React.useState(false);
 
 
 
@@ -196,7 +203,10 @@ export default function Orders() {
   
 
   return (
-    <div className={`orders-layout ${highContrast ? "high-contrast" : ""}`}>
+    <div
+      className={`orders-layout ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`}
+      onMouseMove={(e) => handleMouseMove(e, magnifyMode)}
+    >      
       <div className="orders-content">
         {/* Category Bar */}
         {!showPopup && (
@@ -218,9 +228,22 @@ export default function Orders() {
 
         <div className="accessibility-buttons">
           <Weather />
-          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon}></img></button>
-          <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
-          <button className="circle-btn contrast-btn" aria-label="Accessibility option 2" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon}></img></button>
+          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} /></button>
+          <button
+            className={`circle-btn ${magnifyMode ? 'active' : ''}`}
+            aria-label="Enable text magnification"
+            onClick={() => {
+              if (magnifyMode) {
+                setMagnifyMode(false);
+              } else {
+                setShowMagnifyToggle(true);
+              }
+            }}
+            title={magnifyMode ? 'Disable Magnifier' : 'Enable Magnifier'}
+          >
+            <img src={magnifyIcon} />
+          </button>
+          <button className="circle-btn contrast-btn" aria-label="Toggle high contrast" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon} /></button>
         </div>
         {/* Drink Grid */}
         <div className="grid-container">
@@ -253,6 +276,15 @@ export default function Orders() {
         )}
         </div>
         {showLangSelector && <LanguageSelector onClose={() => setShowLangSelector(false)} />}
+        {showMagnifyToggle && <MagnifyToggle onClose={() => setShowMagnifyToggle(false)} />}
+        <MagnifierLens 
+          lensPos={lensPos}
+          lensText={lensText}
+          lensImageSrc={lensImageSrc}
+          lensImageAlt={lensImageAlt}
+          magnifyMode={magnifyMode}
+          useLens={useLens}
+        />
         <div>
           <button
             style={{ marginTop: "20px" }}

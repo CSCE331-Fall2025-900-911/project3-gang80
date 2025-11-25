@@ -2,6 +2,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "../css/Checkout.css";
 import { useContrastMode } from "../contexts/ContrastModeContext";
+import { useMagnifyMode } from "../contexts/MagnifyModeContext";
+import { useMagnifier } from "../hooks/useMagnifier";
+import { MagnifierLens } from "../components/MagnifierLens";
 import { useTranslation } from "../contexts/TranslationContext";
 
 
@@ -11,6 +14,8 @@ export default function Cart() {
   const location = useLocation();
   const navigate = useNavigate();
   const { highContrast } = useContrastMode();
+  const { magnifyMode, useLens } = useMagnifyMode();
+  const { lensPos, lensText, lensImageSrc, lensImageAlt, handleMouseMove } = useMagnifier();
   const { language, translate, t } = useTranslation();
   const [translatedStatics, setTranslatedStatics] = useState<Record<string, string>>({});
   const [translatedNames, setTranslatedNames] = useState<Record<number, string>>({});
@@ -140,7 +145,7 @@ export default function Cart() {
   };
 
   return (
-    <div className={`checkout-page ${highContrast ? "high-contrast" : ""}`}>
+    <div className={`checkout-page ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
       <h1>{translatedStatics['Checkout'] ?? t('Checkout')}</h1>
       <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
 
@@ -180,6 +185,14 @@ export default function Cart() {
           {translatedStatics['Confirm Order'] ?? t('Confirm Order')}
         </button>
       </div>
+      <MagnifierLens 
+        lensPos={lensPos}
+        lensText={lensText}
+        lensImageSrc={lensImageSrc}
+        lensImageAlt={lensImageAlt}
+        magnifyMode={magnifyMode}
+        useLens={useLens}
+      />
     </div>
   );
 }

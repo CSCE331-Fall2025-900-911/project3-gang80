@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useContrastMode } from "../contexts/ContrastModeContext";
+import { useMagnifyMode } from "../contexts/MagnifyModeContext";
+import { useMagnifier } from "../hooks/useMagnifier";
+import { MagnifierLens } from "../components/MagnifierLens";
 import { makeApiCall } from "../globals";
 import "../css/Confirmation.css";
 
@@ -16,6 +19,8 @@ interface Order {
 
 export default function Confirmation() {
     const { highContrast } = useContrastMode();
+    const { magnifyMode, useLens } = useMagnifyMode();
+    const { lensPos, lensText, lensImageSrc, lensImageAlt, handleMouseMove } = useMagnifier();
     const navigate = useNavigate();
     const [latestOrderNumber, setLatestOrderNumber] = useState<number | null>(null);
 
@@ -44,7 +49,7 @@ export default function Confirmation() {
     }, []);
 
     return (
-        <div className={`confirmation-page absolute top-0 w-[calc(100%-250px)] h-screen flex flex-col items-center justify-center text-center gap-6 ${highContrast ? "high-contrast" : ""}`}>
+        <div className={`confirmation-page absolute top-0 w-[calc(100%-250px)] h-screen flex flex-col items-center justify-center text-center gap-6 ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
             <h1 className="text-3xl font-bold">Order confirmed!</h1>
             <h2 className="text-xl">Order Number: {latestOrderNumber ?? "Loading..."}</h2>
             <button
@@ -53,6 +58,14 @@ export default function Confirmation() {
             >
                 Order More
             </button>
+            <MagnifierLens 
+                lensPos={lensPos}
+                lensText={lensText}
+                lensImageSrc={lensImageSrc}
+                lensImageAlt={lensImageAlt}
+                magnifyMode={magnifyMode}
+                useLens={useLens}
+            />
         </div>
     );
 }
