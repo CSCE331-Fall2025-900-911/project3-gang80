@@ -227,6 +227,7 @@ export default function Orders() {
         )}
 
         <div className="accessibility-buttons">
+          <Weather />
           <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} /></button>
           <button
             className={`circle-btn ${magnifyMode ? 'active' : ''}`}
@@ -293,9 +294,6 @@ export default function Orders() {
             Go to Cart ({totalCartItems})
           </button>
         </div>
-      </div>
-      <div>
-        <Weather />
       </div>
     </div>
   );
