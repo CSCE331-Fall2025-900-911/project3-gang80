@@ -16,7 +16,7 @@ function Navbar() {
     login: [0, 1, 2, 3, 4, 5],
   };
 
-  const [userRole, setUserRole] = useState<number | null>(null);
+  const [, setUserRole] = useState<number | null>(null);
 
   const readRole = () => {
     setUserRole(Number(localStorage.getItem("user_role")));
@@ -59,6 +59,7 @@ function Navbar() {
     const allowed = ACCESS[key] ?? [];
     console.log("Comparing ", user_role, " to list ", allowed, " for key ", key);
     return allowed.includes(user_role);
+    
   };
 
   useEffect(() => {

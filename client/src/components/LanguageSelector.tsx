@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { useTranslation } from '../contexts/TranslationContext';
 
 const LANGUAGES: { code: string; label: string }[] = [

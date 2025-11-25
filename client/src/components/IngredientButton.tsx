@@ -1,4 +1,3 @@
-import * as React from "react";
 import "../css/Inventory.css";
 import { getImageForName } from "../assets/imageMap";
 
