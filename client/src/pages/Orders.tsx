@@ -59,6 +59,11 @@ export default function Orders() {
   const [selectedDrink, setSelectedDrink] = React.useState<{ id: number; name: string; price: number; img_name?: string | null; } | null>(null);
 
   const { highContrast, setHighContrast } = useContrastMode();
+  const [magnifyMode, setMagnifyMode] = useState(false);
+  const [lensPos, setLensPos] = useState<{x:number;y:number}>({x:0,y:0});
+  const [lensText, setLensText] = useState<string>("");
+  const [lensImageSrc, setLensImageSrc] = useState<string | null>(null);
+  const [lensImageAlt, setLensImageAlt] = useState<string>("");
 
 
 
@@ -145,8 +150,39 @@ export default function Orders() {
   };
   
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!magnifyMode) return;
+    const { clientX, clientY } = e;
+    setLensPos({ x: clientX, y: clientY });
+    const el = document.elementFromPoint(clientX, clientY);
+    if (el) {
+      // Try to find an image near the pointer
+      let img: HTMLImageElement | null = null;
+      if ((el as HTMLElement).tagName === 'IMG') {
+        img = el as HTMLImageElement;
+      } else {
+        const parentImg = (el as HTMLElement).closest('.drink-tile-img, .magnifiable')?.querySelector('img');
+        if (parentImg && parentImg instanceof HTMLImageElement) img = parentImg;
+      }
+      if (img && img.src) {
+        setLensImageSrc(img.src);
+        setLensImageAlt(img.alt || 'Magnified image');
+      } else {
+        setLensImageSrc(null);
+        setLensImageAlt("");
+      }
+      const text = (el as HTMLElement).innerText?.trim();
+      if (text && text.length < 200) {
+        setLensText(text);
+      }
+    }
+  };
+
   return (
-    <div className={`orders-layout ${highContrast ? "high-contrast" : ""}`}>
+    <div
+      className={`orders-layout ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`}
+      onMouseMove={handleMouseMove}
+    >      
       <div className="orders-content">
         {/* Category Bar */}
         {!showPopup && (
@@ -164,9 +200,16 @@ export default function Orders() {
         )}
 
         <div className="accessibility-buttons">
-          <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon}></img></button>
-          <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
-          <button className="circle-btn contrast-btn" aria-label="Accessibility option 2" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon}></img></button>
+          <button className="circle-btn" aria-label="Accessibility option 1"><img src={languageIcon} /></button>
+          <button
+            className={`circle-btn ${magnifyMode ? 'active' : ''}`}
+            aria-label="Enable text magnification"
+            onClick={() => setMagnifyMode(m => !m)}
+            title={magnifyMode ? 'Disable Magnifier' : 'Enable Magnifier'}
+          >
+            <img src={magnifyIcon} />
+          </button>
+          <button className="circle-btn contrast-btn" aria-label="Toggle high contrast" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon} /></button>
         </div>
         {/* Drink Grid */}
         <div className="grid-container">
@@ -198,6 +241,18 @@ export default function Orders() {
             </div>
           )}
         </div>
+        {magnifyMode && (
+          <div
+            className="magnifier-lens"
+            style={{ left: lensPos.x - 100, top: lensPos.y - 100 }}
+          >
+            {lensImageSrc ? (
+              <img src={lensImageSrc} alt={lensImageAlt} className="magnifier-image" />
+            ) : (
+              <div className="magnifier-content">{lensText || '...'}</div>
+            )}
+          </div>
+        )}
         <div>
           <button
             style={{ marginTop: "20px" }}

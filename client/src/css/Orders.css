@@ -6,6 +6,79 @@
   margin: auto;
 }
 
+/* Magnify mode increases base font sizes for readability */
+.orders-layout.magnify {
+  font-size: 20px; /* elevate root font size */
+}
+
+.orders-layout.magnify .drink-btn {
+  font-size: 1em; /* inherit enlarged root */
+}
+
+.orders-layout.magnify .drink-tile-name {
+  font-size: 18px;
+}
+
+.orders-layout.magnify .category-btn {
+  font-size: 1rem;
+  padding: 10px 18px;
+}
+
+.orders-layout.magnify .view-cart-btn {
+  font-size: 18px;
+}
+
+/* Optional visual state for active magnify button */
+.circle-btn.active {
+  border-color: #D3191C;
+  box-shadow: 0 0 0 3px rgba(211,25,28,0.25);
+}
+
+/* Magnifier lens */
+.magnifier-lens {
+  position: fixed;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  border: 2px solid #D3191C;
+  z-index: 999;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  backdrop-filter: blur(1px);
+}
+
+.magnifier-content {
+  font-size: 28px;
+  line-height: 1.15;
+  text-align: center;
+  font-weight: 600;
+  color: #111;
+  word-break: break-word;
+}
+
+.magnifier-image {
+  max-width: 180px;
+  max-height: 180px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.orders-layout.high-contrast .magnifier-lens {
+  background: rgba(0,0,0,0.85);
+  border-color: #fff;
+}
+
+.orders-layout.high-contrast .magnifier-content {
+  color: #fff;
+}
+
 .orders-content {
   flex: 1;
   display: flex;
