@@ -217,6 +217,7 @@ export default function Orders() {
         )}
 
         <div className="accessibility-buttons">
+          <Weather />
           <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon}></img></button>
           <button className="circle-btn" aria-label="Accessibility option 2"><img src={magnifyIcon}></img></button>
           <button className="circle-btn contrast-btn" aria-label="Accessibility option 2" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon}></img></button>
@@ -261,9 +262,6 @@ export default function Orders() {
             Go to Cart ({totalCartItems})
           </button>
         </div>
-      </div>
-      <div>
-        <Weather />
       </div>
     </div>
   );
