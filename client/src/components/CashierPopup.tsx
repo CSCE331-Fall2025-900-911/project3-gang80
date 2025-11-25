@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { makeApiCall } from "../globals";
 
 interface CashierPopupProps {
     onClose: () => void;
@@ -31,17 +32,11 @@ export default function CashierPopup({ onClose, onAdd }: CashierPopupProps) {
     const [selectedSweetness, setSelectedSweetness] = useState<number | null>(null);
     const [selectedToppings, setSelectedToppings] = useState<Record<number, boolean>>({});
 
-    const API_BASE = (import.meta.env.VITE_API_BASE as string) || "";
-
     useEffect(() => {
         let cancelled = false;
         setLoading(true);
-        fetch(`${API_BASE}/api/db/menu_modifications`)
-            .then((res) => {
-                if (!res.ok) throw new Error(`Status ${res.status}`);
-                return res.json();
-            })
-            .then((data) => {
+        makeApiCall('/api/db/menu_modifications', 'GET', null)
+            .then((data: any) => {
                 if (!cancelled) {
                     setMods(data?.categories || {});
                 }
