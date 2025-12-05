@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import "../css/MenuBoard.css";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface MenuItem {
     id: number;
@@ -20,7 +20,6 @@ const API_URL = "http://127.0.0.1:5000";
 
 export default function MenuBoard() {
     const navigate = useNavigate();
-    const { search } = useLocation();
 
     const [items, setItems] = useState<MenuItem[]>([]);
     const [mods, setMods] = useState<ModificationGroups>({});
@@ -54,9 +53,16 @@ export default function MenuBoard() {
         loadMods();
     }, []);
 
-    const toppings = mods["Topping"] || [];
-    const sweetnessLevels = mods["Sweetness Level"] || [];
-    const iceLevels = mods["Ice"] || [];
+    const toppingsAll = mods["Topping"] || [];
+
+    const iceNames = ["No Ice", "Less Ice", "Regular Ice"];
+    const sweetnessNames = ["No Sugar", "Half Sweetness", "Regular Sweetness"];
+
+    const iceLevels = toppingsAll.filter(t => iceNames.includes(t.name));
+    const sweetnessLevels = toppingsAll.filter(t => sweetnessNames.includes(t.name));
+    const toppings = toppingsAll.filter(
+        t => !iceNames.includes(t.name) && !sweetnessNames.includes(t.name)
+    );
 
     const drinkCategories = [
         "Milk Tea",
