@@ -309,8 +309,9 @@ export default function Orders() {
 
         {selected === "Recommended" && (
           <div className="recommended-text" style={{ margin: "0px 0px 20px 0px" }}>
-            <label style={{ marginRight: 8 }}>
-              {translatedRecPrefix ?? 'Since it is'} {recommendedTemp !== null ? `${recommendedTemp}°F` : '...'} {translatedRecSuffix ?? 'outside, this is the drink we recommend!'}
+            <label style={{ marginRight: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <span> {translatedRecPrefix ?? 'Since it is'} {recommendedTemp !== null ? `${recommendedTemp}°F` : '...'} {translatedRecSuffix ?? 'outside,'}</span>
+              <span> {translatedRecSuffix ?? 'this is the drink we recommend!'}</span>
             </label>
           </div>
         )}
