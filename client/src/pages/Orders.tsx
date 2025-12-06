@@ -55,6 +55,7 @@ export default function Orders() {
     "Coffee",
     "Ice Blended",
     "Non-Caffeinated",
+    "Recommended",
   ];
 
   const [drinks, setDrinks] = useState<
@@ -67,6 +68,9 @@ export default function Orders() {
   const { language, translate } = useTranslation();
   const [translatedCategories, setTranslatedCategories] = useState<string[] | null>(null);
   const [translatedDrinkNames, setTranslatedDrinkNames] = useState<Record<number, string>>({});
+  const [translatedRecPrefix, setTranslatedRecPrefix] = useState<string | null>(null);
+  const [translatedRecSuffix, setTranslatedRecSuffix] = useState<string | null>(null);
+  const [recommendedTemp, setRecommendedTemp] = useState<number | null>(null);
 
   const { highContrast, setHighContrast } = useContrastMode();
   const { magnifyMode, useLens, setMagnifyMode } = useMagnifyMode();
@@ -80,6 +84,55 @@ export default function Orders() {
     let active = true;
     async function load() {
       try {
+        // If the user selected the "Recommended" tab, fetch temperature
+        // and pick a single recommended category/drink based on it.
+        if (selected === "Recommended") {
+          try {
+            const wresp = await fetch(`${API_URL}/api/weather`);
+            if (!wresp.ok) throw new Error(`Weather fetch failed: ${wresp.status}`);
+            const wdata = await wresp.json();
+            const temp: number = wdata.temperature;
+            if (active) setRecommendedTemp(temp);
+
+            // Map temperature to a category
+            let recCategory = "Milk Tea";
+            if (temp >= 80) {
+              recCategory = "Ice Blended"; 
+            } else if (temp >= 65) {
+              recCategory = "Fruit Tea"; 
+            } else if (temp >= 50) {
+              recCategory = "Milk Tea";
+            } else {
+              recCategory = "Coffee";
+            }
+
+            const resp = await fetch(
+              `${API_URL}/api/db/menu_items_by_category?category=${encodeURIComponent(recCategory)}`
+            );
+            if (!resp.ok) {
+              console.error("Failed to fetch recommended category items", resp.status);
+              if (active) setDrinks([]);
+              return;
+            }
+            const data = await resp.json();
+            const items = data.items || [];
+            // Choose one drink to recommend. Here we pick the first one (could be randomized).
+            const pick = items.length > 0 ? [items[0]] : [];
+            console.log("Temperature:", temp, "-> recommending category:", recCategory, "pick:", pick);
+            if (active) setDrinks(pick);
+            return;
+          } catch (err) {
+            console.error("Recommended selection error", err);
+            if (active) {
+              setDrinks([]);
+              setRecommendedTemp(null);
+            }
+            return;
+          }
+        }
+
+        // Default behavior: fetch items by the selected category.
+        if (active) setRecommendedTemp(null);
         const resp = await fetch(
           `${API_URL}/api/db/menu_items_by_category?category=${encodeURIComponent(selected)}`
         );
@@ -93,7 +146,10 @@ export default function Orders() {
         if (active) setDrinks(data.items || []);
       } catch (err) {
         console.error("Fetch error", err);
-        if (active) setDrinks([]);
+        if (active) {
+          setDrinks([]);
+          setRecommendedTemp(null);
+        }
       }
     }
     load();
@@ -145,6 +201,31 @@ export default function Orders() {
     run();
     return () => { mounted = false; };
   }, [drinks, language]);
+
+  // Translate the Recommended label parts when language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en') {
+        setTranslatedRecPrefix(null);
+        setTranslatedRecSuffix(null);
+        return;
+      }
+      try {
+        const [prefix, suffix] = await Promise.all([
+          translate('Since it is'),
+          translate('outside, this is the drink we recommend!')
+        ]);
+        if (!mounted) return;
+        setTranslatedRecPrefix(prefix);
+        setTranslatedRecSuffix(suffix);
+      } catch (err) {
+        console.error('Recommended label translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [language, translate]);
 
   const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     setSelectedDrink(drink);
@@ -226,6 +307,14 @@ export default function Orders() {
         </div>
         )}
 
+        {selected === "Recommended" && (
+          <div className="recommended-text" style={{ margin: "0px 0px 20px 0px" }}>
+            <label style={{ marginRight: 8 }}>
+              {translatedRecPrefix ?? 'Since it is'} {recommendedTemp !== null ? `${recommendedTemp}°F` : '...'} {translatedRecSuffix ?? 'outside, this is the drink we recommend!'}
+            </label>
+          </div>
+        )}
+
         <div className="accessibility-buttons">
           <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} /></button>
           <button
@@ -248,7 +337,7 @@ export default function Orders() {
           <Weather />
         </div>
         {/* Drink Grid */}
-        <div className="grid-container">
+        <div className={`grid-container ${selected === "Recommended" && drinks.length === 1 ? "single-centered" : ""}`}>
           {drinks.map((d) => (
             <button
               key={d.id}

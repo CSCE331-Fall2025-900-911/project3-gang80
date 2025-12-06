@@ -40,6 +40,15 @@
   font-size: 20px;
 }
 
+.orders-layout.magnify .recommended-text {
+  font-size: 1em;
+  padding: 15px;
+}
+
+.orders-layout.magnify .recommended-text label {
+  font-size: 1.5em;
+}
+
 .circle-btn.active {
   border-color: #D3191C;
   box-shadow: 0 0 0 3px rgba(211,25,28,0.25);
@@ -144,6 +153,18 @@
   right: 12px;
 }
 
+.recommended-text {
+  display: flex;
+  font-weight: bold;
+  font-size: large;
+  background: #D3191C;
+  border-radius: 10px;
+  padding: 10px;
+  color: white;
+  border: 1px solid;
+  border-color: #111;
+}
+
 /* Accessibility buttons */
 .accessibility-buttons {
   display:flex;
@@ -184,6 +205,13 @@
   grid-template-columns: repeat(4, 200px);
   gap: 20px;
   justify-content: center;
+}
+
+/* When there is a single recommended drink, center it */
+.grid-container.single-centered {
+  grid-template-columns: 200px;
+  justify-content: center;
+  justify-items: center;
 }
 
 .grid-item {
@@ -374,6 +402,12 @@
   grid-template-columns: repeat(4, 200px);
   gap: 20px;
   justify-content: center;
+}
+
+.orders-layout.high-contrast .grid-container.single-centered {
+  grid-template-columns: 200px;
+  justify-content: center;
+  justify-items: center;
 }
 
 .orders-layout.high-contrast .grid-item {
