@@ -9,6 +9,7 @@ type ReportData = {
   value: number | string | null;
 };
 
+
 function Analytics() {
   const { resetContrast } = useContrastMode();
   const [reports, setReports] = useState<ReportData[]>([]);
@@ -30,9 +31,49 @@ function Analytics() {
     setReports(data);
   };
 
+  const [summary, setSummary] = useState({
+    total_sales: 0,
+    total_expenses: 0,
+    profit: 0,
+    num_orders: 0
+  });
+
+  async function fetchSummary() {
+    const res = await fetch(`${API_URL}/api/db/analytics/summary`);
+    const json = await res.json();
+    console.log("Summary:", json);
+    setSummary(json);
+  }
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
+
   return (
     <div style={{ padding: "2rem" }}>
       <h1>Welcome to Analytics</h1>
+      <div className="analytics-cards">
+        <div className="card">
+          <h3>Total Sales</h3>
+          <p>${summary.total_sales.toFixed(2)}</p>
+        </div>
+
+        <div className="card">
+          <h3>Total Expenses</h3>
+          <p>${summary.total_expenses.toFixed(2)}</p>
+        </div>
+
+        <div className="card">
+          <h3>Profit</h3>
+          <p>${summary.profit.toFixed(2)}</p>
+        </div>
+
+        <div className="card">
+          <h3>Orders</h3>
+          <p>{summary.num_orders}</p>
+        </div>
+      </div>
+
       <div className="report-buttons">
         <button onClick={runXReport}>Generate X-Report</button>
         <button onClick={runZReport}>Generate Z-Report</button>

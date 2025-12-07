@@ -827,3 +827,55 @@ def get_users():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@bp.route('/analytics/summary', methods=['GET'])
+def analytics_summary():
+    """
+    Returns:
+    {
+       total_sales: float,
+       total_expenses: float,
+       profit: float,
+       num_orders: int
+    }
+    """
+    try:
+        # ---- 1. Load all orders ----
+        orders = db.session.query(models.Order).all()
+
+        total_sales = sum(float(o.total_price) for o in orders)
+        num_orders = len(orders)
+
+        # ---- 2. Compute expenses from recipes/inventory ----
+        # Join:
+        #   JointOrderItem —> which menu items
+        #   JointRecipeIngredient —> what ingredients each menu item uses
+        #   Inventory —> cost of ingredient
+        from sqlalchemy import func
+
+        expenses_query = (
+            db.session.query(
+                func.sum(
+                    models.JointRecipeIngredient.quantity_used *
+                    models.Inventory.restock_price
+                )
+            )
+            .join(models.JointOrderItem,
+                models.JointRecipeIngredient.menu_item_id == models.JointOrderItem.menu_item_id)
+            .join(models.Inventory,
+                models.JointRecipeIngredient.inventory_item_id == models.Inventory.id)
+        ).scalar()
+
+        total_expenses = float(expenses_query or 0.0)
+
+        profit = total_sales - total_expenses
+
+        return jsonify({
+            "total_sales": total_sales,
+            "total_expenses": total_expenses,
+            "profit": profit,
+            "num_orders": num_orders
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
