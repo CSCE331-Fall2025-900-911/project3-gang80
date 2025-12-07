@@ -125,6 +125,34 @@ def menu_modifications():
         return jsonify({"error": str(e)}), 500
 
 
+@bp.route('/menu_items_all', methods=['GET'])
+def menu_items_all():
+    """Return all non-modification menu items (drinks), sorted by category and name."""
+    try:
+        items = (
+            db.session.query(models.MenuItem)
+            .filter(models.MenuItem.is_modification == False)
+            .order_by(models.MenuItem.category.asc(), models.MenuItem.name.asc())
+            .all()
+        )
+
+        data = [
+            {
+                "id": m.id,
+                "name": m.name,
+                "price": float(m.price),
+                "description": m.description,
+                "category": m.category,
+                "img_name": m.img_name,
+            }
+            for m in items
+        ]
+
+        return jsonify({"items": data}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @bp.route('/menu_items/create', methods=['POST'])
 def create_menu_item():
     """Create a new non-modification menu item (drink).

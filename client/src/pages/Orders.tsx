@@ -385,6 +385,14 @@ export default function Orders() {
             className="view-cart-btn">
             Go to Cart ({totalCartItems})
           </button>
+
+          <button
+            style={{ marginTop: "20px", marginLeft: "12px" }}
+            onClick={() => navigate("/kiosk/menu-board")}
+            className="view-menu-btn"
+          >
+            View Menu
+          </button>
         </div>
       </div>
     </div>
