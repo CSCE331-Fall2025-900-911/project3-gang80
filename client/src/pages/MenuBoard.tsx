@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import "../css/MenuBoard.css";
 import { useNavigate } from 'react-router-dom';
+import promoGif from "../assets/bobagif.gif";
 
 interface MenuItem {
     id: number;
@@ -73,30 +74,56 @@ export default function MenuBoard() {
         "Non-Caffeinated",
     ];
 
+    function chunkArray<T>(arr: T[], size: number): T[][] {
+        const chunks: T[][] = [];
+        for (let i = 0; i < arr.length; i += size) {
+            chunks.push(arr.slice(i, i + size));
+        }
+        return chunks;
+    }
+
+    const toppingChunks = chunkArray(toppings, 3); 
+
+
     return (
         <div className="menu-board-container">
-            <button className="back-button" onClick={() => navigate(-1)}>Back</button>
+            {/* Drinks */}
+            <div className="drinks-grid">
+                {drinkCategories.map(cat => {
+                    const group = items.filter(i => i.category === cat);
+                    if (group.length === 0) return null;
 
-            {drinkCategories.map(cat => {
-                const group = items.filter(i => i.category === cat);
-                if (group.length === 0) return null;
+                    return (
+                        <div key={cat} className="drinks-section">
+                            <h1 className="section-title">{cat}</h1>
+                            {group.map(item => (
+                                <div key={item.id} className="item-row">{item.name}</div>
+                            ))}
+                        </div>
+                    );
+                })}
+            </div>
 
-                return (
-                    <div key={cat} className="drinks-section">
-                        <h1 className="section-title">{cat}</h1>
-                        {group.map(item => (
-                            <div key={item.id} className="item-row">{item.name}</div>
-                        ))}
-                    </div>
-                );
-            })}
+            <div className="promo-gif-container">
+                <img src={promoGif} alt="Promo GIF" className="promo-gif" />
+            </div>
 
             {/* Bottom sections for modifications */}
             <div className="mods-container">
-                <div className="mod-column">
-                    <h2 className="mod-title">Toppings</h2>
-                    {toppings.map(t => <div key={t.id} className="mod-item">{t.name}</div>)}
+                <div className="mod-column-toppings-columns">
+                    <h2 className="mod-title-tops">Toppings</h2>
+
+                    <div className="toppings-flex">
+                        {toppingChunks.map((chunk, index) => (
+                            <div key={index} className="toppings-col">
+                                {chunk.map(t => (
+                                    <div key={t.id} className="mod-item">{t.name}</div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
                 </div>
+
                 <div className="mod-column">
                     <h2 className="mod-title">Sweetness Level</h2>
                     {sweetnessLevels.map(s => <div key={s.id} className="mod-item">{s.name}</div>)}
@@ -106,6 +133,8 @@ export default function MenuBoard() {
                     {iceLevels.map(i => <div key={i.id} className="mod-item">{i.name}</div>)}
                 </div>
             </div>
+
+            <button className="back-button" onClick={() => navigate(-1)}>Back</button>
         </div>
     );
 
