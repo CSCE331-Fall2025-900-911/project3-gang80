@@ -485,3 +485,23 @@
   cursor: pointer;
   transition: background 0.3s ease;
 }
+
+.view-cart-btn:hover {
+  background: #e47375;
+}
+
+.view-menu-btn {
+  padding: 12px 24px;
+  background: #D3191C;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.view-menu-btn:hover {
+  background: #e47375;
+}
