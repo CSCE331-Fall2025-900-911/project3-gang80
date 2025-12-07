@@ -1,0 +1,9 @@
+.report-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.report-results {
+  margin-top: 20px;
+}
