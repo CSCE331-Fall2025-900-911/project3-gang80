@@ -79,7 +79,7 @@ function Navbar() {
       <ul className="nav-links">
         {seeNavButton("cashier") && (
           <li>
-            <NavLink to="/" end>
+            <NavLink to="/cashier" end>
               Cashier
             </NavLink>
           </li>
