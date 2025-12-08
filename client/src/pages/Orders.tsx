@@ -401,6 +401,7 @@ export default function Orders() {
             onAdd={(ice, sweet, size, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings, size)}
             title={selectedDrink.name}
             imgName={selectedDrink.img_name ?? ""}
+            price={selectedDrink.price}
           />
         )}
 

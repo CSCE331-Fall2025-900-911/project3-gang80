@@ -155,10 +155,9 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
                                 const ice_label = allItems.find((it) => it.id === selectedIce)?.name ?? undefined;
                                 const sweetness_label = allItems.find((it) => it.id === selectedSweetness)?.name ?? undefined;
                                 const topping_names = topping_ids.map((id) => allItems.find((it) => it.id === id)?.name ?? String(id));
-                                const toppings_total = topping_ids.reduce((sum, id) => {
-                                    const it = allItems.find((ai) => ai.id === id);
-                                    return sum + (it && it.price ? Number(it.price) : 0);
-                                }, 0);
+                                // Each topping adds $0.75
+                                const TOPPING_PRICE = 0.75;
+                                const toppings_total = topping_ids.length * TOPPING_PRICE;
 
                                 onAdd({
                                     ice_level_id: selectedIce,
