@@ -147,3 +147,14 @@
   border-color: black;          /* border-black */
 }
 
+/* Tutorial button */
+.popup-button.tutorial-btn {
+  border: 2px solid #000000;
+  background-color: #dc2626; 
+  color: white;
+}
+
+.popup-button.tutorial-btn:hover {
+  background-color: #dc2626; /* lighter blue */
+  color: white;
+}

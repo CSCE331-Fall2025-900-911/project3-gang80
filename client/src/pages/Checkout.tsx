@@ -6,6 +6,53 @@ import { useMagnifyMode } from "../contexts/MagnifyModeContext";
 import { useMagnifier } from "../hooks/useMagnifier";
 import { MagnifierLens } from "../components/MagnifierLens";
 import { useTranslation } from "../contexts/TranslationContext";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const startCheckoutTutorial = () => {
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: ".checkout-page h1",
+        popover: {
+          title: "Welcome to Checkout!",
+          description: "Review your order summary and select a payment method to complete your purchase.",
+          side: "bottom",
+          align: "center",
+        },
+      },
+      {
+        element: ".checkout-summary",
+        popover: {
+          title: "Order Summary",
+          description: "Here you can see the details of your order including items, subtotal, tax, and total amount.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".payment-section",
+        popover: {
+          title: "Payment Method",
+          description: "Select your preferred payment method from the dropdown menu.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".checkout-actions",
+        popover: {
+          title: "Complete Your Order",
+          description: "Use these buttons to go back to your cart or confirm your order.",
+          side: "top",  
+          align: "center",
+        },
+      },
+    ],
+  });
+  tour.drive();
+}
 
 
 export default function Cart() {
@@ -146,6 +193,12 @@ export default function Cart() {
 
   return (
     <div className={`checkout-page ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
+      
+      <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <button onClick={startCheckoutTutorial} className="tutorial-btn">
+          How to Checkout
+        </button>
+      </div>
       <h1>{translatedStatics['Checkout'] ?? t('Checkout')}</h1>
       <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
 

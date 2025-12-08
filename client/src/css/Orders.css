@@ -505,3 +505,22 @@
 .view-menu-btn:hover {
   background: #e47375;
 }
+
+/* Tutorial button */
+.tutorial-btn {
+  padding: 15px;
+  background: #D3191C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  color: white;
+}
+
+.tutorial-btn:hover {
+  padding: 15px;
+  background: #D3191C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  color: white;
+}
