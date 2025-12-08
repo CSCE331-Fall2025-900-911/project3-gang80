@@ -43,6 +43,7 @@ class Order(db.Model):
     total_price = db.Column(db.Numeric(10, 2), nullable=False)
     pearls_earned = db.Column(db.Integer)
     payment_method = db.Column(db.String(20), nullable=False)
+    voided = db.Column(db.Boolean, default=False)
 
     customer = db.relationship('User', foreign_keys=[customer_id], back_populates='customer_orders')
     employee = db.relationship('User', foreign_keys=[employee_id], back_populates='employee_orders')
