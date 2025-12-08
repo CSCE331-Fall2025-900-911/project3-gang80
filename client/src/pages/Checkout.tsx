@@ -6,6 +6,7 @@ import { useMagnifyMode } from "../contexts/MagnifyModeContext";
 import { useMagnifier } from "../hooks/useMagnifier";
 import { MagnifierLens } from "../components/MagnifierLens";
 import { useTranslation } from "../contexts/TranslationContext";
+import { makeApiCall } from "../globals";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 
@@ -56,8 +57,6 @@ const startCheckoutTutorial = () => {
 
 
 export default function Cart() {
-  const API_URL = "https://project3-gang80.onrender.com";
-  //const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const { highContrast } = useContrastMode();
@@ -78,10 +77,58 @@ export default function Cart() {
   }
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const [userRewards, setUserRewards] = useState<number | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [loadingRewards, setLoadingRewards] = useState(false);
+  const [rewardsError, setRewardsError] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
     setCartItems(saved ? JSON.parse(saved) : []);
+  }, []);
+
+  // Fetch user rewards if logged in
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('user_id');
+    if (!storedUserId) {
+      setUserId(null);
+      setUserRewards(null);
+      return;
+    }
+    
+    const uid = Number(storedUserId);
+    if (Number.isNaN(uid)) {
+      setUserId(null);
+      setUserRewards(null);
+      return;
+    }
+    
+    setUserId(uid);
+    setLoadingRewards(true);
+    
+    async function fetchUserRewards() {
+      try {
+        const data = await makeApiCall('/api/db/users', 'GET', null) as { users: any[] };
+        const users = data?.users || [];
+        const user = users.find(u => u.id === uid);
+        if (user) {
+          setUserRewards(Number(user.rewards) || 0);
+          setRewardsError(null);
+        } else {
+          setUserRewards(null);
+          setRewardsError('User not found');
+        }
+      } catch (e) {
+        console.error('Failed to fetch rewards:', e);
+        setUserRewards(null);
+        setRewardsError('Failed to load rewards');
+      } finally {
+        setLoadingRewards(false);
+      }
+    }
+    
+    fetchUserRewards();
   }, []);
 
   // Translate static labels and item names when language changes
@@ -118,17 +165,18 @@ export default function Cart() {
   }, [language, cartItems]);
 
 
-  const [paymentMethod, setPaymentMethod] = useState<string>("");
-
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
   const tax = subtotal * 0.0825;
   const total = subtotal + tax;
+  const requiredPearls = Math.ceil(total);
 
   const handlePaymentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPaymentMethod(e.target.value);
+    // Clear error when changing payment method
+    setRewardsError(null);
   };
 
   const handleConfirmOrder = async () => {
@@ -137,11 +185,25 @@ export default function Cart() {
       return;
     }
 
+    // Validate Pearl Rewards payment
+    if (paymentMethod === "Pearls") {
+      if (userRewards === null) {
+        alert("Unable to verify rewards balance. Please try again.");
+        return;
+      }
+      if (userRewards < requiredPearls) {
+        const shortage = requiredPearls - userRewards;
+        alert(`Insufficient pearls. You need ${requiredPearls} pearls but only have ${userRewards}. You are ${shortage} pearls short.`);
+        return;
+      }
+    }
+
     // Build order payload for Flask backend
     const orderData = {
-      customer_id: null, // guest checkout
+      customer_id: userId, // include customer ID if using Pearl Rewards
       total_price: total,
       pearls_earned: Math.floor(total / 10),
+      pearls_redeemed: paymentMethod === "Pearls" ? requiredPearls : undefined,
       payment_method: paymentMethod,
       order_type: orderType, // dine-in / takeout
       employee_id: 1, // default employee
@@ -152,26 +214,13 @@ export default function Cart() {
     };
 
     try {
-      const resp = await fetch(`${API_URL}/api/db/orders/create`, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      });
+      const data = await makeApiCall('/api/db/orders/create', 'POST', orderData);
 
-      // Log the actual response for debugging
-      console.log("Response status:", resp.status);
-
-      if (!resp.ok) {
-        const text = await resp.text();
-        console.error("Failed to create order:", text);
+      if (!data) {
         alert("There was an error processing your order. Please try again.");
         return;
       }
 
-      const data = await resp.json();
       console.log("Order confirmed!", data);
 
       localStorage.removeItem("cartItems");
@@ -223,11 +272,44 @@ export default function Cart() {
 
       <div className="payment-section">
         <h2>{translatedStatics['Select Payment Method'] ?? t('Select Payment Method')}</h2>
+        {userId && userRewards !== null && (
+          <div className="rewards-info" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem' }}>
+            <p style={{ margin: 0, fontSize: '0.95rem' }}>
+              <strong>Your Pearl Rewards:</strong> {userRewards} pearls
+              {paymentMethod === "Pearls" && (
+                <span style={{ marginLeft: '0.5rem', color: userRewards >= requiredPearls ? '#059669' : '#dc2626' }}>
+                  ({userRewards >= requiredPearls ? 'Sufficient' : `Need ${requiredPearls - userRewards} more`})
+                </span>
+              )}
+            </p>
+          </div>
+        )}
+        {loadingRewards && <p style={{ fontSize: '0.9rem', color: '#6b7280' }}>Loading rewards...</p>}
+        {rewardsError && !loadingRewards && (
+          <div className="error-message" style={{ marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#991b1b' }}>
+            <strong>Error:</strong> {rewardsError}
+          </div>
+        )}
         <select value={paymentMethod} onChange={handlePaymentChange}>
           <option value="">{translatedStatics['--Select--'] ?? t('--Select--')}</option>
           <option value="Credit Card">{translatedStatics['Credit Card'] ?? t('Credit Card')}</option>
           <option value="Cash">{translatedStatics['Cash'] ?? t('Cash')}</option>
+          {userId && userRewards !== null && (
+            <option value="Pearls">Pearls ({userRewards} available)</option>
+          )}
         </select>
+        {paymentMethod === "Pearls" && userRewards !== null && userRewards >= requiredPearls && (
+          <div className="pearls-deduction-notice" style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#ecfdf5', border: '1px solid #86efac', borderRadius: '0.5rem', color: '#065f46' }}>
+            <p style={{ margin: 0, fontSize: '0.95rem' }}>
+              <strong>Note:</strong> {requiredPearls} pearls will be deducted from your account when you confirm this order.
+            </p>
+          </div>
+        )}
+        {paymentMethod === "Pearls" && userRewards !== null && userRewards < requiredPearls && (
+          <div className="error-message" style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#991b1b' }}>
+            <strong>Insufficient Pearls:</strong> You need {requiredPearls} pearls to complete this order, but you only have {userRewards}. Please select a different payment method.
+          </div>
+        )}
       </div>
 
       <div className="checkout-actions">
