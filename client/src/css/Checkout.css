@@ -310,3 +310,22 @@ h1 {
 .checkout-page.high-contrast .magnifier-content {
   color: #fff;
 }
+
+/* Tutorial button */
+.tutorial-btn {
+  padding: 15px;
+  background: #D3191C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  color: white;
+}
+
+.tutorial-btn:hover {
+  padding: 15px;
+  background: #D3191C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  color: white;
+}

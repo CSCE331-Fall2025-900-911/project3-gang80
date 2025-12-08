@@ -7,6 +7,53 @@ import { useMagnifyMode } from "../contexts/MagnifyModeContext";
 import { useMagnifier } from "../hooks/useMagnifier";
 import { MagnifierLens } from "../components/MagnifierLens";
 import { useTranslation } from "../contexts/TranslationContext";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const startCartTutorial = () => {
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: ".cart-page h1",
+        popover: {
+          title: "Welcome to Your Cart!",
+          description: "Here you can review the items you've added to your order.",
+          side: "bottom",
+          align: "center",
+        },
+      },
+      {
+        element: ".cart-items",
+        popover: {
+          title: "Cart Items",
+          description: "This section lists all the items in your cart along with their details.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".cart-total",
+        popover: {
+          title: "Total Amount",
+          description: "This shows the total cost of all items in your cart.",  
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".cart-actions",
+        popover: {
+          title: "Actions",
+          description: "Use these buttons to continue ordering or proceed to checkout.",
+          side: "top",
+          align: "center",
+        },
+      },
+    ],
+  });
+  tour.drive();
+}
 
 
 interface CartItem {
@@ -140,6 +187,11 @@ export default function Cart() {
 
   return (
     <div className={`cart-page ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
+      <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <button onClick={startCartTutorial} className="tutorial-btn">
+          How to Use Cart
+        </button>
+      </div>
       <h1>{translatedStatics['Cart'] ?? t('Cart')}</h1>
       <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
       {cartItems.length === 0 ? (<p>Your cart is empty.</p>) : (
@@ -163,6 +215,7 @@ export default function Cart() {
         
         </>
       )}
+
         <h3 className="cart-total">{(translatedStatics['Total:'] ?? t('Total:'))} ${total.toFixed(2)}</h3>
         <div className="cart-actions">
           <button className="back-btn" onClick={handleOrder}>{translatedStatics['Continue Ordering'] ?? t('Continue Ordering')}</button>

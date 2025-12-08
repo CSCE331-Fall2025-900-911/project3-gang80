@@ -17,6 +17,44 @@ import { useContrastMode } from '../contexts/ContrastModeContext';
 import { useMagnifyMode } from '../contexts/MagnifyModeContext';
 import { useMagnifier } from '../hooks/useMagnifier';
 import Weather from "../components/Weather";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const startOrderTutorial = () => {
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: ".category-bar",
+        popover: {
+          title: "Drink Categories",
+          description: "Select a category to view drinks in that category.",
+          side: "bottom",
+          align: "center",
+        },
+      },
+      {
+        element: ".drink-btn:nth-of-type(1)",
+        popover: {
+          title: "Select a Drink",
+          description: "Click on a drink to customize and add it to your cart.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".view-cart-btn",
+        popover: {
+          title: "View Cart",
+          description: "Click here to view your cart and proceed to checkout.",
+          side: "top",
+          align: "center",
+        },
+      },
+    ],
+  });
+  tour.drive();
+}
 
 interface CartItem {
   id: number;
@@ -337,6 +375,13 @@ export default function Orders() {
         <div className = "weather-container">
           <Weather />
         </div>
+
+        <div style={{ marginTop: "20px", textAlign: "center" }}>
+          <button onClick={startOrderTutorial} className="tutorial-btn">
+    How to Order
+          </button>
+        </div>
+        
         {/* Drink Grid */}
         <div className={`grid-container ${selected === "Recommended" && drinks.length === 1 ? "single-centered" : ""}`}>
           {drinks.map((d) => (

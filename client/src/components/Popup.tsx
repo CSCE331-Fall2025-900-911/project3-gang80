@@ -3,7 +3,44 @@ import DrinkImage from "./DrinkImage";
 import { useEffect, useState } from "react";
 import { useTranslation } from "../contexts/TranslationContext";
 import { useContrastMode } from "../contexts/ContrastModeContext";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
+const startPopupTutorial = () => {
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: ".popup h2", 
+        popover: {
+          title: "Customization",
+          description: "Customize your drink by selecting ice level, sweetness level, and toppings.",
+          side: "bottom",
+          align: "center",
+        },
+      },
+      {
+        element: ".popup-bar button:nth-of-type(3)",
+        popover: {
+          title: "Add Button",
+          description: "Click this button to add the customized drink to your cart after making your selections.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".popup-bar button:nth-of-type(1)",
+        popover: {
+          title: "Close Button",
+          description: "Click this button to close the customization popup without adding the drink to your cart.",
+          side: "top",
+          align: "center",
+        },
+      },
+    ],
+  });
+  tour.drive();
+}
 
 interface PopupProps {
   onClose: () => void;
@@ -183,6 +220,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
         <div className="popup-bar">
             <button onClick={onClose} className="popup-button">{translatedStatics['Close'] ?? t('Close')}</button>
             <h2 className="text-xl font-semibold">{translatedStatics['Customization'] ?? t('Customization')}</h2>
+            <button onClick={startPopupTutorial} className="popup-button tutorial-btn">How to customize</button>
             <button
               onClick={handleAdd}
               className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
