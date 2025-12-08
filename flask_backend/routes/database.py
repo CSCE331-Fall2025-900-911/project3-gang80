@@ -632,7 +632,8 @@ def get_all_orders():
                 total_price,
                 pearls_earned,
                 employee_id,
-                payment_method
+                payment_method,
+                voided
             },
             ...
         ]
@@ -649,12 +650,51 @@ def get_all_orders():
                 "total_price": float(o.total_price) if o.total_price else None,
                 "pearls_earned": o.pearls_earned,
                 "employee_id": o.employee_id,
-                "payment_method": o.payment_method
+                "payment_method": o.payment_method,
+                "voided": o.voided or False
             }
             for o in orders
         ]
         return jsonify({"orders": data}), 200
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@bp.route('/orders/<int:order_id>/void', methods=['POST', 'OPTIONS'])
+def void_order(order_id):
+    """
+    Mark an order as voided.
+    
+    Expected body (optional):
+    {
+        "reason": "string" (optional, for logging purposes)
+    }
+    
+    Response:
+    {
+        "id": order_id,
+        "voided": true,
+        "message": "Order voided successfully"
+    }
+    """
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        order = db.session.query(models.Order).filter_by(id=order_id).first()
+        if not order:
+            return jsonify({"error": "Order not found"}), 404
+        
+        order.voided = True
+        db.session.commit()
+        
+        return jsonify({
+            "id": order.id,
+            "voided": True,
+            "message": "Order voided successfully"
+        }), 200
+    except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 

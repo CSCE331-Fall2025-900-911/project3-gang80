@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import "../css/Analytics.css";
 import { API_URL } from '../globals';
 import { useCountUp } from "../hooks/useCountUp";
+import RecentOrders from '../components/RecentOrders';
 
 type ReportData = {
   id: number;
@@ -108,6 +109,12 @@ function Analytics() {
             </tbody>
           </table>
         )}
+      </div>
+
+      <div className="past-orders">
+        <div style={{ paddingTop: '1rem' }}>
+          <RecentOrders />
+        </div>
       </div>
     </div>
   );
