@@ -62,6 +62,7 @@ interface CartItem {
   price: number;
   quantity: number;
   iceLevel?: number | null;
+  sizeLevel?: number | null;
   sweetnessLevel?: number | null;
   toppings?: Array<{ id: number; name: string; price?: number }>;
 }
@@ -114,6 +115,7 @@ export default function Cart() {
             ... item,
             iceLevelName: item.iceLevel != null ? map[item.iceLevel] : undefined,
             sweetnessLevelName: item.sweetnessLevel != null ? map[item.sweetnessLevel] : undefined,
+            sizeLevelName: item.sizeLevel != null ? map[item.sizeLevel] : undefined,
             toppings: item.toppings?.map(t => ({
               ...t,
               name: map[t.id] || t.name
@@ -138,7 +140,7 @@ export default function Cart() {
         const names = ids.map(id => menuMap[id]);
         const staticTexts = [
           'Cart', 'Order type:', 'Your cart is empty.', 'Remove', 'Continue Ordering', 'Checkout',
-          'Ice:', 'Sweetness:', 'Toppings:', 'Total:'
+          'Ice:', 'Sweetness:', 'Size:', 'Toppings:', 'Total:'
         ];
         const promises: Promise<string>[] = [];
         names.forEach(n => promises.push(translate(n)));
@@ -173,11 +175,14 @@ export default function Cart() {
     navigate("/kiosk/checkout", { state: { orderType: orderType } });
   };
 
-  const getItemDetails = (item: CartItem & { iceLevelName?: string; sweetnessLevelName?: string }) => {
+  const getItemDetails = (item: CartItem & { iceLevelName?: string; sweetnessLevelName?: string; sizeLevelName?: string }) => {
     const mods: string[] = [];
 
     if (item.iceLevelName) mods.push(`${translatedStatics['Ice:'] ?? t('Ice:')} ${translatedMenuMap[item.iceLevel as number] ?? item.iceLevelName}`);
     if (item.sweetnessLevelName) mods.push(`${translatedStatics['Sweetness:'] ?? t('Sweetness:')} ${translatedMenuMap[item.sweetnessLevel as number] ?? item.sweetnessLevelName}`);
+    if (item.sizeLevelName) {
+      mods.push(`${translatedStatics['Size:'] ?? t('Size:')} ${translatedMenuMap[item.sizeLevel as number] ?? item.sizeLevelName}`);
+    }
     if (item.toppings && item.toppings.length > 0) {
       mods.push(`${translatedStatics['Toppings:'] ?? t('Toppings:')} ${item.toppings.map(t => translatedMenuMap[t.id] ?? t.name).join(", ")}`);
     }

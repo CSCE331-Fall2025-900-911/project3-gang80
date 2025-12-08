@@ -73,6 +73,7 @@ export default function Cart() {
     name: string;
     price: number;
     quantity: number;
+    sizeLevel?: number | null;
     toppings?: Array<{ id: number; name: string; price: number }>;
   }
 
@@ -81,7 +82,37 @@ export default function Cart() {
   const [userRewards, setUserRewards] = useState<number | null>(null);
   const [userId, setUserId] = useState<number | null>(null);
   const [loadingRewards, setLoadingRewards] = useState(false);
+  const [menuMap, setMenuMap] = useState<Record<number, string>>({});
   const [rewardsError, setRewardsError] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const API_URL = "https://project3-gang80.onrender.com";
+    fetch(`${API_URL}/api/db/menu_items`)
+      .then(res => res.json())
+      .then(data => {
+        const map: Record<number, string> = {}
+        data.items.forEach((item: any) => {
+          map[item.id] = item.name;
+        });
+        setMenuMap(map);
+      })
+      .catch(err => console.error("Failed to fetch menu items:", err));
+  }, []);
+
+  const getSizeLabel = (sizeLevel: number | null | undefined): string => {
+    if (!sizeLevel || !menuMap[sizeLevel]) return '';
+    
+    const sizeName = menuMap[sizeLevel].toLowerCase();
+    
+    if (sizeName.includes('medium') || sizeName === 'm') {
+      return 'M';
+    } else if (sizeName.includes('large') || sizeName === 'l') {
+      return 'L';
+    }
+    
+    return sizeName.charAt(0).toUpperCase();
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
@@ -249,16 +280,23 @@ export default function Cart() {
       <div className="checkout-summary">
         <h2>{translatedStatics['Order Summary'] ?? t('Order Summary')}</h2>
         <ul>
-          {cartItems.map((item, index) => (
-            <li key={index}>
-              {(translatedNames[index] ?? item.name)} 
-              {item.toppings && item.toppings.length > 0 && (
-                <> + {item.toppings.map(t => t.name).join(", ")}</>
-              )}
-              {" - $"}
-              {item.price.toFixed(2)} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
-            </li>
-          ))}
+          {cartItems.map((item, index) => {
+            const sizeLabel = getSizeLabel(item.sizeLevel);
+            return (
+              <li key={index}>
+                <span>
+                  {sizeLabel && <strong>[{sizeLabel}] </strong>}
+                  {(translatedNames[index] ?? item.name)} 
+                  {item.toppings && item.toppings.length > 0 && (
+                    <> + {item.toppings.map(t => t.name).join(", ")}</>
+                  )}
+                </span>
+                <span>
+                  ${item.price.toFixed(2)} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
         <h3>{translatedStatics['Subtotal:'] ?? t('Subtotal:')} ${subtotal.toFixed(2)}</h3>
         <h3>{translatedStatics['Tax:'] ?? t('Tax:')} ${tax.toFixed(2)}</h3>

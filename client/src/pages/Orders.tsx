@@ -63,6 +63,7 @@ interface CartItem {
   quantity: number;
   iceLevel?: number | null;
   sweetnessLevel?: number | null;
+  sizeLevel?: number | null;
   toppings?: Array<{ id: number; name: string; price: number }>;
 }
 
@@ -284,13 +285,15 @@ export default function Orders() {
     drink: { id: number; name: string; price: number; img_name?: string | null; },
     iceLevel?: number | null,
     sweetnessLevel?: number | null,
-    toppings?: Array<{ id: number; name: string; price: number }>
+    toppings?: Array<{ id: number; name: string; price: number }>,
+    sizeLevel?: number | null,
   ) => {
     const existing = cartItems.findIndex(
       (item) =>
         item.id === drink.id &&
         item.iceLevel === iceLevel &&
         item.sweetnessLevel === sweetnessLevel &&
+        item.sizeLevel === sizeLevel &&
         JSON.stringify(item.toppings?.map(t => t.id).sort()) === JSON.stringify(toppings?.map(t => t.id).sort())
     );
 
@@ -312,6 +315,7 @@ export default function Orders() {
           quantity: 1,
           iceLevel,
           sweetnessLevel,
+          sizeLevel,
           toppings
         },
       ]);
@@ -394,7 +398,7 @@ export default function Orders() {
           {showPopup && selectedDrink && (
           <Popup
             onClose={handleClosePopup}
-            onAdd={(ice, sweet, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings)}
+            onAdd={(ice, sweet, size, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings, size)}
             title={selectedDrink.name}
             imgName={selectedDrink.img_name ?? ""}
           />
