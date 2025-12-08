@@ -138,7 +138,7 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
             <div className="bg-white w-3/4 p-6 rounded-xl shadow-xl max-h-[85vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Customize Your Drink</h2>
