@@ -1,0 +1,65 @@
+.portal-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 100vh;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.portal-title {
+  font-size: 3rem;
+  font-weight: bold;
+  margin: 0 0 2rem 0;
+  margin-bottom: 4rem;
+}
+
+.portal-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  align-items: center;
+}
+
+.portal-buttons-row {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.portal-button {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 2px solid black;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s;
+  min-width: 150px;
+}
+
+.portal-button:hover {
+  transform: scale(1.05);
+}
+
+.portal-button img {
+  width: 8rem; 
+  height: 8rem;
+}
+
+.portal-logo {
+  width: 300px;
+  height: auto;
+}
+
+.portal-logo-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}

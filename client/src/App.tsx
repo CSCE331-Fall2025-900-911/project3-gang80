@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import Portal from "./pages/Portal";
 import Cashier from "./pages/Cashier";
 import Inventory from "./pages/Inventory";
 import Employees from "./pages/Employees";
@@ -26,6 +27,7 @@ function App() {
   const location = useLocation();
 
   const hideNavBarRoutes = [
+    "/",
     "/menu-board",
     "/kiosk/menu-board"
   ];
@@ -43,7 +45,8 @@ function App() {
 
       <div className="app-container" style={{ marginLeft: hideNavbar ? "0px" : "250px" }}>
         <Routes>
-          <Route path="/" element={<Cashier />} />
+          <Route path="/" element={<Portal />} />
+          <Route path="/cashier" element={<Cashier />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/analytics" element={<Analytics />} />
