@@ -272,6 +272,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                         const nameVal = name?.toLowerCase() || '';
                         const catVal = cat?.toLowerCase() || '';
                         
+                        if (nameVal === 'hot') return 'ice';
+
                         // Check name first (more specific)
                         if (nameVal.includes('size') || catVal.includes('size')) return 'size';
                         if (nameVal.includes('ice') && !nameVal.includes('ice cream')) return 'ice';
@@ -322,11 +324,11 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                       });
                     };
 
-                    sweetItems = sortByPreference(sweetItems, ['regular', 'half', 'no sugar']);
-                    iceItems = sortByPreference(iceItems, ['regular', 'less', 'no ice']);
+                    sweetItems = sortByPreference(sweetItems, ['extra sweetness', 'regular', 'half', 'no sugar']);
+                    iceItems = sortByPreference(iceItems, ['extra ice', 'regular', 'less', 'no ice', 'hot']);
 
                     // Prepare slices to match requested visual counts
-                    const iceSlice = iceItems.slice(0, 4);
+                    const iceSlice = iceItems.slice(0, 5);
                     const sweetSlice = sweetItems.slice(0, 4);
                     const toppingSlice = toppingItems.slice(0, 10);
 
