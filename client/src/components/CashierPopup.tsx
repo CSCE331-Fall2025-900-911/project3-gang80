@@ -3,6 +3,8 @@ import { makeApiCall } from "../globals";
 
 interface CashierPopupProps {
     onClose: () => void;
+    selectedItem?: { id: number; name: string; price: number; category: string; img_name?: string | null };
+    onEdit?: () => void;
     onAdd: (selection: {
         ice_level_id: number | null;
         sweetness_level_id: number | null;
@@ -23,7 +25,7 @@ interface ModificationItem {
     img_name?: string | null;
 }
 
-export default function CashierPopup({ onClose, onAdd }: CashierPopupProps) {
+export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: CashierPopupProps) {
     const [mods, setMods] = useState<Record<string, ModificationItem[]>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -138,37 +140,48 @@ export default function CashierPopup({ onClose, onAdd }: CashierPopupProps) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
             <div className="bg-white w-3/4 p-6 rounded-xl shadow-xl max-h-[85vh] overflow-y-auto">
-                <div className="flex justify-between mb-4">
-                    <button onClick={onClose} className="px-3 py-2 rounded border border-gray-300 bg-white cursor-pointer hover:bg-gray-100 active:scale-[0.96] transition">X</button>
-                    <button
-                        onClick={() => {
-                            if (!selectionsComplete) return;
-                            const topping_ids = Object.entries(selectedToppings).filter(([_, v]) => v).map(([k]) => Number(k));
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold">Customize Your Drink</h2>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => {
+                                if (!selectionsComplete) return;
+                                const topping_ids = Object.entries(selectedToppings).filter(([_, v]) => v).map(([k]) => Number(k));
 
-                            // Resolve labels and topping prices from available items
-                            const allItems = [...iceItems, ...sweetItems, ...toppingItems, ...otherGroups.flatMap((g) => g.items)];
-                            const ice_label = allItems.find((it) => it.id === selectedIce)?.name ?? undefined;
-                            const sweetness_label = allItems.find((it) => it.id === selectedSweetness)?.name ?? undefined;
-                            const topping_names = topping_ids.map((id) => allItems.find((it) => it.id === id)?.name ?? String(id));
-                            const toppings_total = topping_ids.reduce((sum, id) => {
-                                const it = allItems.find((ai) => ai.id === id);
-                                return sum + (it && it.price ? Number(it.price) : 0);
-                            }, 0);
+                                // Resolve labels and topping prices from available items
+                                const allItems = [...iceItems, ...sweetItems, ...toppingItems, ...otherGroups.flatMap((g) => g.items)];
+                                const ice_label = allItems.find((it) => it.id === selectedIce)?.name ?? undefined;
+                                const sweetness_label = allItems.find((it) => it.id === selectedSweetness)?.name ?? undefined;
+                                const topping_names = topping_ids.map((id) => allItems.find((it) => it.id === id)?.name ?? String(id));
+                                const toppings_total = topping_ids.reduce((sum, id) => {
+                                    const it = allItems.find((ai) => ai.id === id);
+                                    return sum + (it && it.price ? Number(it.price) : 0);
+                                }, 0);
 
-                            onAdd({
-                                ice_level_id: selectedIce,
-                                sweetness_level_id: selectedSweetness,
-                                topping_ids,
-                                ice_label,
-                                sweetness_label,
-                                topping_names,
-                                toppings_total,
-                            });
-                        }}
-                        className={`px-4 py-2 rounded cursor-pointer transition active:scale-[0.97] ${!selectionsComplete ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-red-600 text-white hover:brightness-110"}`}
-                    >
-                        Add
-                    </button>
+                                onAdd({
+                                    ice_level_id: selectedIce,
+                                    sweetness_level_id: selectedSweetness,
+                                    topping_ids,
+                                    ice_label,
+                                    sweetness_label,
+                                    topping_names,
+                                    toppings_total,
+                                });
+                            }}
+                            className={`px-4 py-2 rounded cursor-pointer transition active:scale-[0.97] ${!selectionsComplete ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-red-600 text-white hover:brightness-110"}`}
+                        >
+                            Add
+                        </button>
+                        {onEdit && selectedItem && (
+                            <button
+                                onClick={onEdit}
+                                className="px-4 py-2 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 active:scale-[0.97] transition"
+                            >
+                                Edit Drink
+                            </button>
+                        )}
+                        <button onClick={onClose} className="px-3 py-2 rounded border border-gray-300 bg-white cursor-pointer hover:bg-gray-100 active:scale-[0.96] transition">X</button>
+                    </div>
                 </div>
 
                 {loading && <p>Loading options...</p>}
