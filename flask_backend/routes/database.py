@@ -18,6 +18,7 @@ bp = Blueprint('database', __name__)
 # Define Routes
 
 @bp.route('/menu_items', methods=['GET'])
+@require_roles(Roles.UNVERIFIED)
 def get_items():
     """
     Return all menu items with full details:
@@ -53,7 +54,7 @@ def get_items():
 
 
 @bp.route('/menu_items_by_category', methods=['GET'])
-# @require_roles(Roles.CUSTOMER, Roles.EMPLOYEE, Roles.MANAGER, Roles.KIOSK)
+@require_roles(Roles.CUSTOMER, Roles.EMPLOYEE, Roles.MANAGER, Roles.KIOSK)
 def menu_items_by_category():
     """Return non-modification menu items (drinks) for a given category.
     Query param: category=<string>
@@ -88,6 +89,7 @@ def menu_items_by_category():
     
 
 @bp.route('/menu_modifications', methods=['GET'])
+@require_roles(Roles.UNVERIFIED)
 def menu_modifications():
     """Return modification menu items grouped by category.
 
@@ -126,6 +128,7 @@ def menu_modifications():
 
 
 @bp.route('/menu_items_all', methods=['GET'])
+@require_roles(Roles.UNVERIFIED)
 def menu_items_all():
     """Return all non-modification menu items (drinks), sorted by category and name."""
     try:
@@ -154,6 +157,7 @@ def menu_items_all():
 
 
 @bp.route('/menu_items/create', methods=['POST'])
+@require_roles(Roles.MANAGER)
 def create_menu_item():
     """Create a new non-modification menu item (drink).
     Expected JSON body:
@@ -220,6 +224,7 @@ def create_menu_item():
         return jsonify({"error": str(e)}), 500
 
 @bp.route('/menu_items/<int:item_id>/update', methods=['PATCH', 'POST'])
+@require_roles(Roles.MANAGER)
 def update_menu_item(item_id):
     """Update an existing menu item.
     Accepts partial fields.
@@ -298,6 +303,7 @@ def update_menu_item(item_id):
     
 
 @bp.route('/menu_items/<int:item_id>/delete', methods=['DELETE'])
+@require_roles(Roles.MANAGER)
 def delete_menu_item(item_id):
     """Hard delete a menu item and any orders containing it.
     Steps:
@@ -370,6 +376,7 @@ def delete_menu_item(item_id):
 
 
 @bp.route('/menu_items/<int:item_id>/recipe/set', methods=['POST'])
+@require_roles(Roles.MANAGER)
 def set_menu_item_recipe(item_id):
     """Define (replace) the recipe ingredients for a menu item.
     Expected body:
@@ -431,6 +438,7 @@ def set_menu_item_recipe(item_id):
     
 
 @bp.route('/inventory', methods=['GET'])
+@require_roles(Roles.EMPLOYEE, Roles.MANAGER)
 def get_inventory():
     """Return all inventory items.
 
@@ -456,6 +464,7 @@ def get_inventory():
 
 
 @bp.route('/inventory/item', methods=['GET'])
+@require_roles(Roles.EMPLOYEE, Roles.MANAGER)
 def get_inventory_item():
     """Return a single inventory item by id or name.
 
@@ -491,6 +500,7 @@ def get_inventory_item():
 
 
 @bp.route('/inventory/order', methods=['POST', 'OPTIONS'])
+@require_roles(Roles.MANAGER)
 def submit_inventory_order():
     # Handle CORS preflight
     if request.method == 'OPTIONS':
@@ -546,6 +556,7 @@ def submit_inventory_order():
 
 
 @bp.route('/inventory/create', methods=['POST', 'OPTIONS'])
+@require_roles(Roles.MANAGER)
 def create_inventory_item():
     # Handle CORS preflight
     if request.method == 'OPTIONS':
@@ -587,6 +598,7 @@ def create_inventory_item():
 
 
 @bp.route('/translate', methods=['POST', 'OPTIONS'])
+@require_roles(Roles.UNVERIFIED)
 def translate_text():
     # Proxy translation requests to Google Cloud Translation API (v2)
     if request.method == 'OPTIONS':
@@ -619,6 +631,7 @@ def translate_text():
         return jsonify({"error": "Translation request failed", "details": str(e)}), 502
     
 @bp.route('/orders', methods=['GET'])
+@require_roles(Roles.MANAGER)
 def get_all_orders():
     """
     Return all orders from the orders table.
@@ -690,6 +703,7 @@ def add_user():
     return jsonify({"user_id": user.id, "user_role":user.role, "message": "User added"})
 
 @bp.route('/orders/create', methods=['POST', 'OPTIONS'])
+@require_roles(Roles.CUSTOMER, Roles.KIOSK, Roles.EMPLOYEE, Roles.MANAGER)
 def create_order():
     # Handle CORS preflight requests
     if request.method == "OPTIONS":
@@ -781,6 +795,7 @@ def create_order():
         return jsonify({"error": str(e)}), 500
     
 @bp.route('/users/create', methods=['POST'])
+@require_roles(Roles.MANAGER)
 def create_user():
     data = request.get_json()
     try:
@@ -805,6 +820,7 @@ def create_user():
         return jsonify({"error": str(e)}), 500
 
 @bp.route('/users/<int:user_id>/delete', methods=['DELETE'])
+@require_roles(Roles.MANAGER)
 @cross_origin(origins=["http://localhost:5173", "https://project3-gang80-1.onrender.com"], supports_credentials=True)
 def delete_user(user_id):
     user = db.session.query(models.User).filter_by(id=user_id).first()
@@ -816,6 +832,7 @@ def delete_user(user_id):
     return jsonify({"message": "User deleted successfully"}), 200
     
 @bp.route('/users', methods=['GET'])
+@require_roles(Roles.EMPLOYEE, Roles.MANAGER)
 def get_users():
     """
     Return all users in the system.
@@ -848,6 +865,7 @@ def get_users():
         return jsonify({"error": str(e)}), 500
 
 @bp.route('/analytics/summary', methods=['GET'])
+@require_roles(Roles.MANAGER)
 def analytics_summary():
     """
     Returns:
