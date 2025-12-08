@@ -52,6 +52,7 @@ interface PopupProps {
   ) => void;
   title: string;
   imgName: string;
+  price: number;
 }
 
 interface ModificationItem {
@@ -63,7 +64,7 @@ interface ModificationItem {
   img_name?: string | null;
 }
 
-function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
+function Popup({ onClose, onAdd, title, imgName, price }: PopupProps) {
   const [mods, setMods] = useState<Record<string, ModificationItem[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +216,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
       .filter(([_, selected]) => selected)
       .map(([id]) => {
         const topping = Object.values(mods).flat().find((mod) => mod.id === Number(id));
-        return { id: Number(id), name: topping?.name || "", price: topping?.price || 0 };
+        // Each topping costs $0.75
+        return { id: Number(id), name: topping?.name || "", price: 0.75 };
       });
 
     onAdd(selectedIce, selectedSweetness, selectedSize, selectedToppingsArray);
@@ -223,18 +225,33 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
 
   const selectionsComplete = !!selectedIce && !!selectedSweetness && !!selectedSize;
 
+  // Calculate current price with selected toppings ($0.75 each) and large size (+$0.75)
+  const selectedToppingsCount = Object.values(selectedToppings).filter(Boolean).length;
+  
+  // Check if selected size is "large"
+  const allItems = Object.values(mods).flat();
+  const selectedSizeItem = allItems.find(item => item.id === selectedSize);
+  const isSizeLarge = selectedSizeItem?.name?.toLowerCase().includes('large') || false;
+  
+  const currentPrice = price + (selectedToppingsCount * 0.75) + (isSizeLarge ? 0.75 : 0);
+
   return (
     <div className={`popup ${highContrast ? "high-contrast" : ""}`}>
       <div className="background">
         <div className="popup-bar">
             <button onClick={onClose} className="popup-button">{translatedStatics['Close'] ?? t('Close')}</button>
             <h2 className="text-xl font-semibold">{translatedStatics['Customization'] ?? t('Customization')}</h2>
-            <button
-              onClick={handleAdd}
-              className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
-            >
-              {translatedStatics['Add'] ?? t('Add')}
-            </button> 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '1.125rem', fontWeight: '600', color: '#D3191C' }}>
+                ${currentPrice.toFixed(2)}
+              </span>
+              <button
+                onClick={handleAdd}
+                className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
+              >
+                {translatedStatics['Add'] ?? t('Add')}
+              </button>
+            </div>
         </div>
 
         {validationMsg && (
