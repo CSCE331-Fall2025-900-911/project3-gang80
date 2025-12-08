@@ -506,7 +506,6 @@
   background: #e47375;
 }
 
-/* Tutorial button */
 .tutorial-btn {
   padding: 15px;
   background: #D3191C;
@@ -523,4 +522,39 @@
   border: none;
   border-radius: 8px;
   color: white;
+}
+
+.floating-circle-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 270px;
+
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+
+  background: #D3191C;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  cursor: pointer;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 9999;
+}
+
+.floating-circle-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+.orders-layout.magnify .floating-circle-btn {
+  transform: scale(1.2);
 }

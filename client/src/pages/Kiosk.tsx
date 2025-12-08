@@ -54,9 +54,6 @@ export default function Kiosk() {
       <div className="logo-container1">
         <img src={logo} alt="Logo" className="kiosk-logo" />
       </div>
-      <button className="tutorial-btn" onClick={startTutorial}>
-        Start Tutorial
-      </button>
       <h1 className="kiosk-title">Dine In or Take Out?</h1>
       <div className="kiosk-buttons">
         <button className="kiosk-button" onClick={() => handleSelect("Dine-In")}>
@@ -66,6 +63,9 @@ export default function Kiosk() {
           <img src={takeOutImg} alt="Take Out" />
         </button>
       </div>
+      <button onClick={startTutorial} className="floating-circle-btn">
+        ?
+      </button>
     </div>
   );
 }
