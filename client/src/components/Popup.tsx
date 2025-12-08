@@ -216,11 +216,9 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   return (
     <div className={`popup ${highContrast ? "high-contrast" : ""}`}>
       <div className="background">
-
         <div className="popup-bar">
             <button onClick={onClose} className="popup-button">{translatedStatics['Close'] ?? t('Close')}</button>
             <h2 className="text-xl font-semibold">{translatedStatics['Customization'] ?? t('Customization')}</h2>
-            <button onClick={startPopupTutorial} className="popup-button tutorial-btn">How to customize</button>
             <button
               onClick={handleAdd}
               className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
@@ -408,6 +406,9 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
             </div>
           </div>
         </div>
+        <button onClick={startPopupTutorial} className="popup-floating-btn">
+          ?
+        </button>
 
       </div>
     </div>

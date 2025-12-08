@@ -187,11 +187,6 @@ export default function Cart() {
 
   return (
     <div className={`cart-page ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button onClick={startCartTutorial} className="tutorial-btn">
-          How to Use Cart
-        </button>
-      </div>
       <h1>{translatedStatics['Cart'] ?? t('Cart')}</h1>
       <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
       {cartItems.length === 0 ? (<p>Your cart is empty.</p>) : (
@@ -230,6 +225,9 @@ export default function Cart() {
         magnifyMode={magnifyMode}
         useLens={useLens}
       />
+      <button onClick={startCartTutorial} className="floating-circle-btn">
+        ?
+      </button>
     </div>
   );
 }
