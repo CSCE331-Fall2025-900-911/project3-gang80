@@ -4,8 +4,47 @@
   margin-bottom: 20px;
 }
 
+.report-buttons button {
+    border-radius: 5px;
+    border: none;
+    padding: 10px 16px;
+    background-color: #D3191C;
+    color: white;
+}
+
 .report-results {
   margin-top: 20px;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e2e2e2;
+  max-width: 900px;
+}
+
+.report-results table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.report-results th {
+  background-color: #D3191C;
+  color: white;
+  padding: 12px 10px;
+  text-align: left;
+}
+
+.report-results td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;  /* row separation */
+}
+
+.report-results tr:nth-child(even) {
+  background-color: #f2f2f2;      /* zebra striping */
+}
+
+.report-results tr:hover {
+  background-color: #ffe5e5;      /* subtle hover highlight */
 }
 
 .analytics-cards {
