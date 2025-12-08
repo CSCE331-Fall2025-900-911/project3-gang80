@@ -58,7 +58,7 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
         const nameVal = item.name?.toLowerCase() || "";
         const catVal = (item.category || "").toLowerCase();
         let kind: "ice" | "sweetness" | "toppings" | "other";
-        if (nameVal.includes("ice") && !nameVal.includes("ice cream")) kind = "ice";
+        if ((nameVal.includes("ice") || nameVal.includes("hot")) && !nameVal.includes("ice cream")) kind = "ice";
         else if (nameVal.includes("sweetness") || nameVal.includes("sweet") || nameVal.includes("no sugar") || nameVal.includes("sugar")) kind = "sweetness";
         else if (
             nameVal.includes("topping") ||
@@ -99,7 +99,7 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
             const nameVal = item.name?.toLowerCase() || "";
             const catVal = (item.category || category || "").toLowerCase();
             let kind: "ice" | "sweetness" | "toppings" | "other";
-            if (nameVal.includes("ice") && !nameVal.includes("ice cream")) kind = "ice";
+            if ((nameVal.includes("ice") || nameVal.includes("hot")) && !nameVal.includes("ice cream")) kind = "ice";
             else if (nameVal.includes("sweetness") || nameVal.includes("sweet") || nameVal.includes("no sugar") || nameVal.includes("sugar")) kind = "sweetness";
             else if (nameVal.includes("topping") || nameVal.includes("boba") || nameVal.includes("jelly") || nameVal.includes("pudding") || nameVal.includes("crema") || nameVal.includes("cream") || nameVal.includes("ice cream")) kind = "toppings";
             else if (catVal.includes("ice")) kind = "ice";
@@ -121,11 +121,13 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
     // Order the ice and sweetness levels from regular -> less/half -> none
     const orderPreferenceScore = (name: string) => {
         const n = (name || '').toLowerCase();
-        if (/\b(regular|normal|full|100%|default)\b/.test(n)) return 0;
-        if (/\b(half|50%|medium)\b/.test(n)) return 1;
-        if (/\b(no|none|0%|zero|no sugar|no ice)\b/.test(n)) return 2;
-        if (/\bless\b/.test(n)) return 0.5;
-        return 3;
+        if (/\b(more|extra|120%)\b/.test(n)) return 0;
+        if (/\b(regular|normal|full|100%|default)\b/.test(n)) return 1;
+        if (/\b(half|50%|medium|less)\b/.test(n)) return 2;
+        if (/\b(no|none|0%|zero|no sugar|no ice)\b/.test(n)) return 3;
+        if (/\b(hot)\b/.test(n)) return 4;
+        // if (/\bless\b/.test(n)) return 0.5;
+        return 5;
     };
 
     const sortByPreference = (arr: ModificationItem[]) => {
