@@ -168,7 +168,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
     if (nameVal.includes('size') || catVal.includes('size')) {
         kind = 'size';
     }
-    else if (nameVal.includes('ice') && !nameVal.includes('ice cream')) kind = 'ice';
+    
+    else if ((nameVal.includes('ice') || nameVal.includes('hot')) && !nameVal.includes('ice cream')) kind = 'ice';
     else if (nameVal.includes('sweetness') || nameVal.includes('sweet') || nameVal.includes('no sugar') || nameVal.includes('sugar')) kind = 'sweetness';
     else if (
       nameVal.includes('topping') ||
@@ -272,7 +273,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                         const nameVal = name?.toLowerCase() || '';
                         const catVal = cat?.toLowerCase() || '';
                         
-                        if (nameVal === 'hot') return 'ice';
+                        if (nameVal.includes('hot')) return 'ice';
 
                         // Check name first (more specific)
                         if (nameVal.includes('size') || catVal.includes('size')) return 'size';
