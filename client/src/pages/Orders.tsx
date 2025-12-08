@@ -375,12 +375,6 @@ export default function Orders() {
         <div className = "weather-container">
           <Weather />
         </div>
-
-        <div style={{ marginTop: "20px", textAlign: "center" }}>
-          <button onClick={startOrderTutorial} className="tutorial-btn">
-    How to Order
-          </button>
-        </div>
         
         {/* Drink Grid */}
         <div className={`grid-container ${selected === "Recommended" && drinks.length === 1 ? "single-centered" : ""}`}>
@@ -440,6 +434,11 @@ export default function Orders() {
           </button>
         </div>
       </div>
+      {!showPopup && (
+        <button onClick={startOrderTutorial} className="floating-circle-btn">
+          ?
+        </button>
+      )}
     </div>
   );
 }

@@ -243,11 +243,6 @@ export default function Cart() {
   return (
     <div className={`checkout-page ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
       
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button onClick={startCheckoutTutorial} className="tutorial-btn">
-          How to Checkout
-        </button>
-      </div>
       <h1>{translatedStatics['Checkout'] ?? t('Checkout')}</h1>
       <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
 
@@ -328,6 +323,9 @@ export default function Cart() {
         magnifyMode={magnifyMode}
         useLens={useLens}
       />
+      <button onClick={startCheckoutTutorial} className="floating-circle-btn">
+        ?
+      </button>
     </div>
   );
 }

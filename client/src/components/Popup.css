@@ -158,3 +158,38 @@
   background-color: #dc2626; /* lighter blue */
   color: white;
 }
+
+.popup .background {
+  position: relative; /* allow absolute children */
+}
+
+/* Floating circular button in the popup */
+.popup-floating-btn {
+  position: sticky;
+  bottom: 1px;
+  left: 1px;
+
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+
+  background: #D3191C;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 20;   /* stays above content */
+}
+
+.popup-floating-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
