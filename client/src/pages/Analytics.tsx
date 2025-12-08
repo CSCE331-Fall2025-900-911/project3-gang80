@@ -2,6 +2,7 @@ import { useContrastMode } from '../contexts/ContrastModeContext';
 import { useEffect, useState } from "react";
 import "../css/Analytics.css";
 import { API_URL } from '../globals';
+import { useCountUp } from "../hooks/useCountUp";
 
 type ReportData = {
   id: number;
@@ -49,28 +50,33 @@ function Analytics() {
     fetchSummary();
   }, []);
 
+  const totalSales = useCountUp(summary.total_sales);
+  const totalExpenses = useCountUp(summary.total_expenses);
+  const profit = useCountUp(summary.profit);
+  const numOrders = useCountUp(summary.num_orders);
+
   return (
     <div style={{ padding: "2rem" }}>
       <h1>Welcome to Analytics</h1>
       <div className="analytics-cards">
         <div className="card">
           <h3>Total Sales</h3>
-          <p>${summary.total_sales.toFixed(2)}</p>
+          <p>${totalSales.toFixed(2)}</p>
         </div>
 
         <div className="card">
           <h3>Total Expenses</h3>
-          <p>${summary.total_expenses.toFixed(2)}</p>
+          <p>${totalExpenses.toFixed(2)}</p>
         </div>
 
         <div className="card">
           <h3>Profit</h3>
-          <p>${summary.profit.toFixed(2)}</p>
+          <p>${profit.toFixed(2)}</p>
         </div>
 
         <div className="card">
           <h3>Orders</h3>
-          <p>{summary.num_orders}</p>
+          <p>{numOrders.toFixed(0)}</p>
         </div>
       </div>
 
