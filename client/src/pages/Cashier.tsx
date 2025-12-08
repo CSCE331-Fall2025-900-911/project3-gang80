@@ -85,6 +85,61 @@ export default function Cashier() {
 	}, []);
 
 	const [submitting, setSubmitting] = useState(false);
+	const [contact, setContact] = useState("");
+	const [contactType, setContactType] = useState<"email"|"phone"|null>(null);
+	const [rewards, setRewards] = useState<number | null>(null);
+	const [contactUserId, setContactUserId] = useState<number | null>(null);
+	const [checkingRewards, setCheckingRewards] = useState(false);
+	const [contactLookupError, setContactLookupError] = useState<string | null>(null);
+	const [usePearls, setUsePearls] = useState(false);
+
+	// helper: validate contact and fetch rewards
+	async function validateAndFetchRewards() {
+		const v = contact.trim();
+		if (!v) { setRewards(null); setContactType(null); setContactLookupError(null); return; }
+		const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		const phoneDigits = v.replace(/[^0-9]/g, '');
+		let detectedType: "email"|"phone"|null = null;
+		if (emailRe.test(v)) {
+			detectedType = 'email';
+		} else if (phoneDigits.length >= 7 && phoneDigits.length <= 15) {
+			detectedType = 'phone';
+		} else {
+			setContactType(null); setRewards(null); return;
+		}
+		setContactType(detectedType);
+		setContactLookupError(null);
+		setCheckingRewards(true);
+		try {
+			const data = await makeApiCall('/api/db/users', 'GET', null) as { users: any[] };
+			const users = data?.users || [];
+			let found = null;
+			if (detectedType === 'email') {
+				found = users.find(u => u.email && u.email.toLowerCase() === v.toLowerCase());
+			}
+			if (!found && detectedType === 'phone') {
+				found = users.find(u => {
+					if (!u.phone_number) return false;
+					const d = (u.phone_number + '').replace(/[^0-9]/g, '');
+					return d === phoneDigits;
+				});
+			}
+			if (found) {
+				setRewards(Number(found.rewards) || 0);
+				setContactUserId(found.id || null);
+				setContactLookupError(null);
+			} else {
+				setRewards(null);
+				setContactUserId(null);
+				setContactLookupError('No account found for that email or phone number');
+			}
+		} catch (e) {
+			setRewards(null);
+			setContactLookupError('Failed to check rewards');
+		} finally {
+			setCheckingRewards(false);
+		}
+	}
 	// Pricing calculations
 	const TAX_RATE = 0.0825;
 	const subtotal = cartItems.reduce((sum, c) => sum + c.price * c.quantity, 0);
@@ -124,20 +179,30 @@ export default function Cashier() {
 			// Pearls earned: one per drink ordered
 			const pearlsEarned = cartItems.reduce((sum, c) => sum + c.quantity, 0);
 
-			const payload = {
-				customer_id: null, // TODO: Extend later to include customer flow
+				const payload: any = {
+				customer_id: contactUserId || null,
 				employee_id: employeeId,
-				payment_method: "Cash",
+				payment_method: usePearls ? 'Pearls' : 'Cash',
 				pearls_earned: pearlsEarned,
 				total_price: totalWithTax, 
 				items,
 			};
+			if (usePearls) {
+				payload.pearls_redeemed = Math.ceil(totalWithTax);
+				payload.payment_method = 'Pearls';
+			}
 
-			await makeApiCall('/api/db/orders/create', 'POST', payload);
+		await makeApiCall('/api/db/orders/create', 'POST', payload);
 
-			// Successful order and clear cart
-			setCartItems([]);
-			alert('Order submitted successfully.');
+		// Successful order; clear cart and customer info
+		setCartItems([]);
+		setContact('');
+		setContactType(null);
+		setRewards(null);
+		setContactUserId(null);
+		setContactLookupError(null);
+		setUsePearls(false);
+		alert('Order submitted successfully.');
 		} catch (e: any) {
 			console.error('Charge error:', e);
 			setError(e?.message || 'Failed to submit order');
@@ -163,16 +228,6 @@ export default function Cashier() {
 									className="relative group cursor-pointer bg-[#f3f3f3] border border-[#d0d5dd] rounded-lg min-h-44 w-full flex flex-col items-center px-2 pt-2 pb-3 shadow-sm transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-600 overflow-hidden"
 									title={item.name}
 								>
-									<div
-										onClick={(e) => { e.stopPropagation(); setEditingDrink(item); setEditDrinkOpen(true); }}
-										className="absolute top-1 right-1 px-2 py-1 text-[10px] leading-none bg-white border border-gray-300 rounded shadow cursor-pointer hover:bg-gray-50 active:scale-[0.95]"
-										role="button"
-										tabIndex={0}
-										onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setEditingDrink(item); setEditDrinkOpen(true); } }}
-										aria-label={`Edit ${item.name}`}
-									>
-										Edit
-									</div>
 									<div className="flex items-center justify-center h-32 w-full overflow-hidden px-2">
 										{item.img_name ? (
 											<DrinkImage drink={item.img_name} size={220} fill className="object-contain" />
@@ -253,10 +308,69 @@ export default function Cashier() {
 							<span className="font-medium">Total</span>
 							<span className="font-semibold">${totalWithTax.toFixed(2)}</span>
 						</div>
-						<div className="flex items-center justify-between mb-4">
-						{/* <span className="font-medium">Use Pearls?</span>
-						<button className="px-4 py-2 bg-[#D3191C] text-white rounded-xl cursor-pointer hover:brightness-110 active:scale-[0.98] transition">Redeem</button> */}
-					</div>
+						{/* Rewards */}
+						<div className="mb-4">
+							<label className="block text-sm font-medium mb-1">Rewards (optional)</label>
+							<input
+								className="w-full px-3 py-2 border rounded"
+								placeholder="you@example.com or 555-123-4567"
+								value={contact}
+								onChange={(e) => { setContact(e.target.value); setUsePearls(false); }}
+								onBlur={async () => { await validateAndFetchRewards(); }}
+								onKeyDown={async (e) => { if (e.key === 'Enter') { e.preventDefault(); await validateAndFetchRewards(); } }}
+							/>
+								<div className="mt-2 text-sm">
+									{checkingRewards ? (
+										<span>Checking rewards…</span>
+									) : contactLookupError ? (
+										<span className="text-sm text-red-600">{contactLookupError}</span>
+									) : rewards === null ? (
+										<span className="text-gray-600">Enter email or phone to check rewards</span>
+									) : (
+										<span>Rewards: <strong>{rewards}</strong> pearls</span>
+									)}
+								</div>
+							{/* Invalid customer info */}
+							{contact.trim() !== '' && contactType === null && !checkingRewards && (
+								<div className="text-sm text-red-600 mt-2">Invalid email or phone number</div>
+							)}
+						{contactType !== null && rewards !== null && (
+							<div className="mt-3">
+								{(() => {
+									const required = Math.ceil(totalWithTax);
+									const available = typeof rewards === 'number' ? rewards : 0;
+									const canCover = available >= required;
+									return (
+										<>
+											<button
+												className={`w-full px-4 py-2 rounded-xl text-white transition active:scale-[0.98] ${
+													usePearls 
+														? 'bg-green-600 hover:brightness-110 cursor-pointer' 
+														: canCover 
+															? 'bg-[#D3191C] hover:brightness-110 cursor-pointer' 
+															: 'bg-gray-400 cursor-not-allowed'
+												}`}
+												onClick={() => { 
+													if (canCover) {
+														setUsePearls(!usePearls);
+													}
+												}}
+												disabled={!canCover || checkingRewards}
+												aria-disabled={!canCover || checkingRewards}
+											>
+												{usePearls ? '✓ Pearls Selected' : 'Use Pearls'}
+											</button>
+											{usePearls && (
+												<div className="mt-2 text-sm text-green-700 font-medium">
+													✓ {required} pearls will be used when you press Charge
+												</div>
+											)}
+										</>
+									);
+								})()}
+							</div>
+						)}
+						</div>
 					</div>
 					<button
 						className={`w-full py-4 text-white text-lg rounded-xl ${cartItems.length === 0 || submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#D3191C] cursor-pointer hover:brightness-110 active:scale-[0.98]'} transition`}
@@ -271,6 +385,12 @@ export default function Cashier() {
 			{modalOpen && selectedItem && (
 				<CashierPopup
 					onClose={() => setModalOpen(false)}
+					selectedItem={selectedItem}
+					onEdit={() => {
+						setEditingDrink(selectedItem);
+						setEditDrinkOpen(true);
+						setModalOpen(false);
+					}}
 					onAdd={(selection) => {
 						const toppings_total = selection.toppings_total ?? 0;
 						const unitPrice = Number(selectedItem.price) + Number(toppings_total);

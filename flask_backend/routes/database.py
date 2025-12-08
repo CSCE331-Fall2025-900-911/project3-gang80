@@ -720,6 +720,26 @@ def create_order():
                         if inventory_item.quantity < 0:
                             inventory_item.quantity = 0
 
+        # If the frontend indicated pearls were redeemed for this order, deduct them from the customer's account
+        pearls_redeemed = data.get('pearls_redeemed')
+        customer_id = data.get('customer_id')
+        if pearls_redeemed and customer_id:
+            try:
+                user = db.session.query(models.User).filter_by(id=customer_id).first()
+                if user is None:
+                    db.session.rollback()
+                    return jsonify({"error": "Customer not found for pearls deduction"}), 400
+                # ensure numeric
+                user_rewards = int(user.rewards or 0)
+                redeem_amount = int(pearls_redeemed)
+                if user_rewards < redeem_amount:
+                    db.session.rollback()
+                    return jsonify({"error": "Insufficient pearls on account"}), 400
+                user.rewards = user_rewards - redeem_amount
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error": f"Failed to deduct pearls: {str(e)}"}), 500
+
         db.session.commit()
 
         return jsonify({
