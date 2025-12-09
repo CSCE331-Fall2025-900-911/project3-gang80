@@ -228,6 +228,9 @@ export default function Cashier() {
 									className="relative group cursor-pointer bg-[#f3f3f3] border border-[#d0d5dd] rounded-lg min-h-44 w-full flex flex-col items-center px-2 pt-2 pb-3 shadow-sm transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-600 overflow-hidden"
 									title={item.name}
 								>
+									{item.name === 'Lava Flow' && (
+										<div className="absolute top-0.5 right-0.5 text-red-600 text-2xl pointer-events-none z-10">★</div>
+									)}
 									<div className="flex items-center justify-center h-32 w-full overflow-hidden px-2">
 										{item.img_name ? (
 											<DrinkImage drink={item.img_name} size={220} fill className="object-contain" />
@@ -255,6 +258,12 @@ export default function Cashier() {
 							{items.length === 0 && (
 								<div className="col-span-6 text-center text-gray-500 py-12">No menu items found.</div>
 							)}
+						</div>
+					)}
+					{!loading && !error && items.length > 0 && (
+						<div className="flex items-center justify-center mt-4 text-sm text-gray-600">
+							<span className="text-red-600 text-xl mr-2">★</span>
+							<span>Seasonal Drink</span>
 						</div>
 					)}
 				</div>
