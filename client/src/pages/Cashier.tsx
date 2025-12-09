@@ -28,6 +28,7 @@ export default function Cashier() {
 			topping_ids: number[];
 			ice_label?: string;
 			sweetness_label?: string;
+			size_label?: string;
 			topping_names?: string[];
 			toppings_total?: number;
 		};
@@ -273,15 +274,17 @@ export default function Cashier() {
 						<div className="h-48 w-full bg-gray-200 rounded mb-2 p-3 overflow-y-auto">
 						{cartItems.length === 0 ? (
 							<div className="text-xs text-gray-600">Cart is empty</div>
-						) : (
-							cartItems.map((c) => {
-								const iceLabel = c.selections.ice_label ?? '';
-								const sweetLabel = c.selections.sweetness_label ?? '';
-								const toppingNames = c.selections.topping_names || [];
-								const selectionParts: string[] = [];
-								if (iceLabel) selectionParts.push(`Ice: ${iceLabel}`);
-								if (sweetLabel) selectionParts.push(`Sweet: ${sweetLabel}`);
-								if (toppingNames.length) selectionParts.push(toppingNames.join(', '));
+					) : (
+						cartItems.map((c) => {
+							const iceLabel = c.selections.ice_label ?? '';
+							const sweetLabel = c.selections.sweetness_label ?? '';
+							const sizeLabel = c.selections.size_label ?? '';
+							const toppingNames = c.selections.topping_names || [];
+							const selectionParts: string[] = [];
+							if (sizeLabel) selectionParts.push(`Size: ${sizeLabel}`);
+							if (iceLabel) selectionParts.push(`Ice: ${iceLabel}`);
+							if (sweetLabel) selectionParts.push(`Sweet: ${sweetLabel}`);
+							if (toppingNames.length) selectionParts.push(toppingNames.join(', '));
 								return (
 									<div key={c.id} className="flex flex-col bg-white/70 rounded px-2 py-2 mb-2">
 										<div className="flex items-start justify-between mb-1">
