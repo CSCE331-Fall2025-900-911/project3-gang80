@@ -151,14 +151,14 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
                         <div className="flex items-center gap-2 border border-gray-300 rounded px-3 py-1">
                             <button
                                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                className="text-lg font-bold px-2 hover:bg-gray-100 rounded transition"
+                                className="text-lg font-bold px-2 cursor-pointer hover:bg-gray-100 rounded transition"
                             >
                                 −
                             </button>
                             <span className="text-lg font-semibold min-w-[2rem] text-center">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(Math.min(20, quantity + 1))}
-                                className="text-lg font-bold px-2 hover:bg-gray-100 rounded transition"
+                                className="text-lg font-bold px-2 cursor-pointer hover:bg-gray-100 rounded transition"
                             >
                                 +
                             </button>
@@ -195,7 +195,7 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
                         {onEdit && selectedItem && (
                             <button
                                 onClick={onEdit}
-                                className="px-4 py-2 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 active:scale-[0.97] transition"
+                                className="px-4 py-2 text-sm bg-white border border-gray-300 rounded cursor-pointer hover:bg-gray-50 active:scale-[0.97] transition"
                             >
                                 Edit Drink
                             </button>
