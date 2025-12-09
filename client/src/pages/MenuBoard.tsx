@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import "../css/MenuBoard.css";
 import { useNavigate } from 'react-router-dom';
 import promoGif from "../assets/bobagif.gif";
