@@ -36,13 +36,15 @@ export default function Cashier() {
 
 	const { resetContrast } = useContrastMode();
 
+	const [selectedCategory, setSelectedCategory] = useState<string>("Milk Tea");
+
 	useEffect(() => {
 		localStorage.removeItem("cartItems");
 		resetContrast(); // ensure contrast is OFF on non-kiosk routes
 	}, []);
 
 	// Categories for base drinks
-	const CATEGORIES = [
+	const drinkCategories = [
 		"Milk Tea",
 		"Fruit Tea",
 		"Matcha",
@@ -58,7 +60,7 @@ export default function Cashier() {
 			setError(null);
 			try {
 				const results = await Promise.all(
-					CATEGORIES.map(async (cat) => {
+					drinkCategories.map(async (cat) => {
 						const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
 						return (data.items || []).map((d: any) => ({
 							id: d.id,
@@ -218,15 +220,27 @@ export default function Cashier() {
 		<>
 			<div className="w-full h-screen flex bg-gray-100">
 				<div className="flex-1 p-6 overflow-y-auto">
+					{/* Category Bar */}
+					<div className="category-bar">
+						{drinkCategories.map((category) => (
+							<button
+								key={category}
+								className={`category-btn ${category === selectedCategory ? "active" : ""}`}
+								onClick={() => setSelectedCategory(category)}
+							>
+								{category}
+							</button>
+						))}
+					</div>
 					{loading && <p className="text-center text-sm text-gray-600">Loading menu...</p>}
 					{error && <p className="text-center text-red-600">{error}</p>}
 					{!loading && !error && (
 						<div className="grid grid-cols-6 gap-4">
-							{items.map((item) => (
+							{items.filter(item => item.category === selectedCategory).map((item) => (
 								<button
 									key={item.id}
 									onClick={() => { setSelectedItem(item); setModalOpen(true); }}
-									className="relative group cursor-pointer bg-[#f3f3f3] border border-[#d0d5dd] rounded-lg min-h-44 w-full flex flex-col items-center px-2 pt-2 pb-3 shadow-sm transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-600 overflow-hidden"
+									className="relative group cursor-pointer bg-[#f3f3f3] border border-[#d0d5dd] rounded-lg min-h-44 w-full flex flex-col items-center px-2 pt-2 pb-3 shadow-sm transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-white focus:outline-none overflow-hidden"
 									title={item.name}
 								>
 									{item.name === 'Lava Flow' && (
@@ -456,7 +470,7 @@ export default function Cashier() {
 						(async () => {
 						try {
 							const results = await Promise.all(
-								CATEGORIES.map(async (cat) => {
+								drinkCategories.map(async (cat) => {
 									const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
 									return (data.items || []).map((d: any) => ({
 										id: d.id,
@@ -474,7 +488,7 @@ export default function Cashier() {
 							}
 						})();
 					}}
-				categories={CATEGORIES}
+				categories={drinkCategories}
 				item={editingDrink}
 				/>
 			)}
@@ -486,7 +500,7 @@ export default function Cashier() {
 						(async () => {
 						try {
 							const results = await Promise.all(
-								CATEGORIES.map(async (cat) => {
+								drinkCategories.map(async (cat) => {
 									const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
 									return (data.items || []).map((d: any) => ({
 										id: d.id,
@@ -503,7 +517,7 @@ console.error('Reload failed', e);
 }
 })();
 }}
-categories={CATEGORIES}
+categories={drinkCategories}
 />
 )}
 </>
