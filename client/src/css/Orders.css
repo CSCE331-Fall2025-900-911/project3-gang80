@@ -63,7 +63,7 @@
   background: rgba(255,255,255,0.95);
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   border: 2px solid #D3191C;
-  z-index: 999;
+  z-index: 99999;
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -93,6 +93,7 @@
 .orders-layout.high-contrast .magnifier-lens {
   background: rgba(0,0,0,0.85);
   border-color: #fff;
+  z-index: 99999;
 }
 
 .orders-layout.high-contrast .magnifier-content {
@@ -237,6 +238,7 @@
   background: #f3f3f3;
   border: 1px solid #d0d5dd;
   border-radius: 8px;
+  position: relative;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   text-align: center;
@@ -486,6 +488,21 @@
   transition: background 0.3s ease;
 }
 
+/* High-contrast styling for the seasonal legend */
+.orders-layout.high-contrast .seasonal-legend {
+  background: rgba(0,0,0,0.92);
+  color: #ffffff;
+  border: 2px solid #D3191C;
+  box-shadow: none;
+  z-index: 3000;
+}
+
+.orders-layout.high-contrast .seasonal-legend-star {
+  color: #D3191C;
+  font-size: 36px;
+  filter: drop-shadow(0 0 3px rgba(211,25,28,0.6));
+}
+
 .view-cart-btn:hover {
   background: #e47375;
 }
@@ -504,6 +521,61 @@
 
 .view-menu-btn:hover {
   background: #e47375;
+}
+
+/* Seasonal star shown on special items */
+.seasonal-star {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: red;
+  font-size: 36px;
+  line-height: 1;
+}
+
+/* Bottom-right legend for seasonal items */
+.seasonal-legend {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.9);
+  padding: 6px 10px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  z-index: 0;
+  font-size: 14px;
+}
+
+.seasonal-legend-star {
+  color: red;
+  font-size: 36px;
+}
+
+
+/* No-items message spans full grid */
+.no-items {
+  grid-column: 1 / -1;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* Action buttons container at bottom */
+.action-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+/* Recommended label layout */
+.recommended-label {
+  margin-right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
 .tutorial-btn {
