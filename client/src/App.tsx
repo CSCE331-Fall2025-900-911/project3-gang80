@@ -11,6 +11,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Confirmation from "./pages/Confirmation";
 import MenuBoard from "./pages/MenuBoard";
+import LoginPage from "./pages/LoginPage";
 import './App.css'
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -47,6 +48,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Portal />} />
           <Route path="/cashier" element={<Cashier />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/analytics" element={<Analytics />} />
