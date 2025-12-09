@@ -16,8 +16,8 @@ interface ModificationGroups {
     [category: string]: MenuItem[];
 }
 
-// const API_URL = "https://project3-gang80.onrender.com";
-const API_URL = "http://127.0.0.1:5000";
+const API_URL = "https://project3-gang80.onrender.com";
+//const API_URL = "http://127.0.0.1:5000";
 
 export default function MenuBoard() {
     const navigate = useNavigate();
