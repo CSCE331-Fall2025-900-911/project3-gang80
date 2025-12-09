@@ -361,7 +361,7 @@ export default function Orders() {
         )}
 
         <div className="accessibility-buttons">
-          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} /></button>
+          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} alt="Language Icon"/></button>
           <button
             className={`circle-btn ${magnifyMode ? 'active' : ''}`}
             aria-label="Enable text magnification"
@@ -374,9 +374,9 @@ export default function Orders() {
             }}
             title={magnifyMode ? 'Disable Magnifier' : 'Enable Magnifier'}
           >
-            <img src={magnifyIcon} />
+            <img src={magnifyIcon} alt="Magnify Icon" />
           </button>
-          <button className="circle-btn contrast-btn" aria-label="Toggle high contrast" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon} /></button>
+          <button className="circle-btn contrast-btn" aria-label="Toggle high contrast" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon} alt="Contrast Icon"/></button>
         </div>
         <div className = "weather-container">
           <Weather />
