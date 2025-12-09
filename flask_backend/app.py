@@ -25,9 +25,9 @@ init_db(app)
 
 
 # Test API calls
-@app.route('/')
-def home():
-    return "This is the API server. Make requests to /api/..."
+# @app.route('/')
+# def home():
+#     return "This is the API server. Make requests to /api/..."
 
 @app.route('/api/test')
 def test():
