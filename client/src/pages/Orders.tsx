@@ -17,6 +17,44 @@ import { useContrastMode } from '../contexts/ContrastModeContext';
 import { useMagnifyMode } from '../contexts/MagnifyModeContext';
 import { useMagnifier } from '../hooks/useMagnifier';
 import Weather from "../components/Weather";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const startOrderTutorial = () => {
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: ".category-bar",
+        popover: {
+          title: "Drink Categories",
+          description: "Select a category to view drinks in that category.",
+          side: "bottom",
+          align: "center",
+        },
+      },
+      {
+        element: ".drink-btn:nth-of-type(1)",
+        popover: {
+          title: "Select a Drink",
+          description: "Click on a drink to customize and add it to your cart.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".view-cart-btn",
+        popover: {
+          title: "View Cart",
+          description: "Click here to view your cart and proceed to checkout.",
+          side: "top",
+          align: "center",
+        },
+      },
+    ],
+  });
+  tour.drive();
+}
 
 interface CartItem {
   id: number;
@@ -25,6 +63,7 @@ interface CartItem {
   quantity: number;
   iceLevel?: number | null;
   sweetnessLevel?: number | null;
+  sizeLevel?: number | null;
   toppings?: Array<{ id: number; name: string; price: number }>;
 }
 
@@ -55,6 +94,7 @@ export default function Orders() {
     "Coffee",
     "Ice Blended",
     "Non-Caffeinated",
+    "Recommended",
   ];
 
   const [drinks, setDrinks] = useState<
@@ -67,6 +107,9 @@ export default function Orders() {
   const { language, translate } = useTranslation();
   const [translatedCategories, setTranslatedCategories] = useState<string[] | null>(null);
   const [translatedDrinkNames, setTranslatedDrinkNames] = useState<Record<number, string>>({});
+  const [translatedRecPrefix, setTranslatedRecPrefix] = useState<string | null>(null);
+  const [translatedRecSuffix, setTranslatedRecSuffix] = useState<string | null>(null);
+  const [recommendedTemp, setRecommendedTemp] = useState<number | null>(null);
 
   const { highContrast, setHighContrast } = useContrastMode();
   const { magnifyMode, useLens, setMagnifyMode } = useMagnifyMode();
@@ -80,6 +123,55 @@ export default function Orders() {
     let active = true;
     async function load() {
       try {
+        // If the user selected the "Recommended" tab, fetch temperature
+        // and pick a single recommended category/drink based on it.
+        if (selected === "Recommended") {
+          try {
+            const wresp = await fetch(`${API_URL}/api/weather`);
+            if (!wresp.ok) throw new Error(`Weather fetch failed: ${wresp.status}`);
+            const wdata = await wresp.json();
+            const temp: number = wdata.temperature;
+            if (active) setRecommendedTemp(temp);
+
+            // Map temperature to a category
+            let recCategory = "Milk Tea";
+            if (temp >= 80) {
+              recCategory = "Ice Blended"; 
+            } else if (temp >= 65) {
+              recCategory = "Fruit Tea"; 
+            } else if (temp >= 50) {
+              recCategory = "Milk Tea";
+            } else {
+              recCategory = "Coffee";
+            }
+
+            const resp = await fetch(
+              `${API_URL}/api/db/menu_items_by_category?category=${encodeURIComponent(recCategory)}`
+            );
+            if (!resp.ok) {
+              console.error("Failed to fetch recommended category items", resp.status);
+              if (active) setDrinks([]);
+              return;
+            }
+            const data = await resp.json();
+            const items = data.items || [];
+            // Choose one drink to recommend. Here we pick the first one (could be randomized).
+            const pick = items.length > 0 ? [items[0]] : [];
+            console.log("Temperature:", temp, "-> recommending category:", recCategory, "pick:", pick);
+            if (active) setDrinks(pick);
+            return;
+          } catch (err) {
+            console.error("Recommended selection error", err);
+            if (active) {
+              setDrinks([]);
+              setRecommendedTemp(null);
+            }
+            return;
+          }
+        }
+
+        // Default behavior: fetch items by the selected category.
+        if (active) setRecommendedTemp(null);
         const resp = await fetch(
           `${API_URL}/api/db/menu_items_by_category?category=${encodeURIComponent(selected)}`
         );
@@ -93,7 +185,10 @@ export default function Orders() {
         if (active) setDrinks(data.items || []);
       } catch (err) {
         console.error("Fetch error", err);
-        if (active) setDrinks([]);
+        if (active) {
+          setDrinks([]);
+          setRecommendedTemp(null);
+        }
       }
     }
     load();
@@ -146,6 +241,31 @@ export default function Orders() {
     return () => { mounted = false; };
   }, [drinks, language]);
 
+  // Translate the Recommended label parts when language changes
+  useEffect(() => {
+    let mounted = true;
+    async function run() {
+      if (language === 'en') {
+        setTranslatedRecPrefix(null);
+        setTranslatedRecSuffix(null);
+        return;
+      }
+      try {
+        const [prefix, suffix] = await Promise.all([
+          translate('Since it is'),
+          translate('outside, this is the drink we recommend!')
+        ]);
+        if (!mounted) return;
+        setTranslatedRecPrefix(prefix);
+        setTranslatedRecSuffix(suffix);
+      } catch (err) {
+        console.error('Recommended label translate error', err);
+      }
+    }
+    run();
+    return () => { mounted = false; };
+  }, [language, translate]);
+
   const handleOpenPopup = (drink: { id: number; name: string; price: number; img_name?: string | null; }) => {
     setSelectedDrink(drink);
     setShowPopup(true);
@@ -165,13 +285,15 @@ export default function Orders() {
     drink: { id: number; name: string; price: number; img_name?: string | null; },
     iceLevel?: number | null,
     sweetnessLevel?: number | null,
-    toppings?: Array<{ id: number; name: string; price: number }>
+    toppings?: Array<{ id: number; name: string; price: number }>,
+    sizeLevel?: number | null,
   ) => {
     const existing = cartItems.findIndex(
       (item) =>
         item.id === drink.id &&
         item.iceLevel === iceLevel &&
         item.sweetnessLevel === sweetnessLevel &&
+        item.sizeLevel === sizeLevel &&
         JSON.stringify(item.toppings?.map(t => t.id).sort()) === JSON.stringify(toppings?.map(t => t.id).sort())
     );
 
@@ -193,6 +315,7 @@ export default function Orders() {
           quantity: 1,
           iceLevel,
           sweetnessLevel,
+          sizeLevel,
           toppings
         },
       ]);
@@ -226,8 +349,16 @@ export default function Orders() {
         </div>
         )}
 
+        {selected === "Recommended" && (
+          <div className="recommended-text">
+            <label className="recommended-label">
+              <span> {translatedRecPrefix ?? 'Since it is'} {recommendedTemp !== null ? `${recommendedTemp}°F` : '...'} {translatedRecSuffix ?? 'outside,'}</span>
+              <span> {translatedRecSuffix ?? 'this is the drink we recommend!'}</span>
+            </label>
+          </div>
+        )}
+
         <div className="accessibility-buttons">
-          <Weather />
           <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} /></button>
           <button
             className={`circle-btn ${magnifyMode ? 'active' : ''}`}
@@ -245,15 +376,23 @@ export default function Orders() {
           </button>
           <button className="circle-btn contrast-btn" aria-label="Toggle high contrast" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon} /></button>
         </div>
+        <div className = "weather-container">
+          <Weather />
+        </div>
+        
         {/* Drink Grid */}
-        <div className="grid-container">
+        <div className={`grid-container ${selected === "Recommended" && drinks.length === 1 ? "single-centered" : ""}`}>
           {drinks.map((d) => (
             <button
               key={d.id}
-              className="drink-btn"
-              title={d.description || d.name}
-              onClick={() => handleOpenPopup(d)}
+              className={`drink-btn ${d.name === 'Lava Flow' ? 'seasonal-item' : ''}`}
+                title={d.description || d.name}
+                onClick={() => handleOpenPopup(d)}
             >
+              {/* Red star for seasonal item named "Lava Flow" */}
+                {(d.name === 'Lava Flow') && (
+                  <span aria-hidden="true" className="seasonal-star">★</span>
+                )}
               <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} size={140}/></div>
               <div className="drink-tile-name">{translatedDrinkNames[d.id] ?? d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
@@ -263,14 +402,15 @@ export default function Orders() {
           {showPopup && selectedDrink && (
           <Popup
             onClose={handleClosePopup}
-            onAdd={(ice, sweet, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings)}
+            onAdd={(ice, sweet, size, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings, size)}
             title={selectedDrink.name}
             imgName={selectedDrink.img_name ?? ""}
+            price={selectedDrink.price}
           />
         )}
 
         {drinks.length === 0 && (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
+          <div className="no-items">
             No items found.
           </div>
         )}
@@ -285,16 +425,32 @@ export default function Orders() {
           magnifyMode={magnifyMode}
           useLens={useLens}
         />
-        <div>
+        <div className="action-buttons">
           <button
-            style={{ marginTop: "20px" }}
             onClick={() =>
               navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems} })}
             className="view-cart-btn">
             Go to Cart ({totalCartItems})
           </button>
+
+          <button
+            onClick={() => navigate("/kiosk/menu-board")}
+            className="view-menu-btn"
+          >
+            View Menu
+          </button>
+        </div>
+
+        <div className="seasonal-legend" aria-hidden={false} role="note">
+          <span className="seasonal-legend-star">★</span>
+          <span>= Seasonal Drink</span>
         </div>
       </div>
+      {!showPopup && (
+        <button onClick={startOrderTutorial} className="floating-circle-btn">
+          ?
+        </button>
+      )}
     </div>
   );
 }

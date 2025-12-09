@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from db import init_db, db
 from routes import database
 from routes import weather
+from routes import reports
 from flask_cors import CORS
 import os
 
@@ -13,7 +14,7 @@ try:
 except Exception:
     pass
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../client/dist', static_url_path='')
 CORS(app, resources={r"/*": {"origins": [
     "https://project3-gang80-1.onrender.com",
     "http://localhost:5173"
@@ -38,6 +39,7 @@ def test():
 app.register_blueprint(database.bp, url_prefix='/api/db')
 # Register weather blueprint so /api/weather is available
 app.register_blueprint(weather.weather_bp)
+app.register_blueprint(reports.reports_bp, url_prefix='/api/analytics')
 
 # Health route to verify translate API key is set (useful for local debugging)
 @app.route('/api/db/translate/health')
@@ -46,6 +48,22 @@ def translate_health():
     if key:
         return {'translate_key_set': True}, 200
     return {'translate_key_set': False, 'message': 'TRANSLATE_API_KEY not set in environment'}, 200
+
+# Serve React frontend - catch-all route for client-side routing
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_react(path):
+    # Serve API and health check routes
+    if path.startswith('api/') or path == 'api':
+        return {'error': 'Not found'}, 404
+    
+    # For static files, try to serve them
+    static_file = os.path.join(app.static_folder, path)
+    if os.path.isfile(static_file):
+        return send_from_directory(app.static_folder, path)
+    
+    # For all other routes, serve index.html (React Router will handle client-side routing)
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))  # Render provides PORT

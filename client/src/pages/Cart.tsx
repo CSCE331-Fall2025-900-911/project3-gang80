@@ -7,6 +7,53 @@ import { useMagnifyMode } from "../contexts/MagnifyModeContext";
 import { useMagnifier } from "../hooks/useMagnifier";
 import { MagnifierLens } from "../components/MagnifierLens";
 import { useTranslation } from "../contexts/TranslationContext";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const startCartTutorial = () => {
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: ".cart-page h1",
+        popover: {
+          title: "Welcome to Your Cart!",
+          description: "Here you can review the items you've added to your order.",
+          side: "bottom",
+          align: "center",
+        },
+      },
+      {
+        element: ".cart-items",
+        popover: {
+          title: "Cart Items",
+          description: "This section lists all the items in your cart along with their details.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".cart-total",
+        popover: {
+          title: "Total Amount",
+          description: "This shows the total cost of all items in your cart.",  
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".cart-actions",
+        popover: {
+          title: "Actions",
+          description: "Use these buttons to continue ordering or proceed to checkout.",
+          side: "top",
+          align: "center",
+        },
+      },
+    ],
+  });
+  tour.drive();
+}
 
 
 interface CartItem {
@@ -15,6 +62,7 @@ interface CartItem {
   price: number;
   quantity: number;
   iceLevel?: number | null;
+  sizeLevel?: number | null;
   sweetnessLevel?: number | null;
   toppings?: Array<{ id: number; name: string; price?: number }>;
 }
@@ -67,6 +115,7 @@ export default function Cart() {
             ... item,
             iceLevelName: item.iceLevel != null ? map[item.iceLevel] : undefined,
             sweetnessLevelName: item.sweetnessLevel != null ? map[item.sweetnessLevel] : undefined,
+            sizeLevelName: item.sizeLevel != null ? map[item.sizeLevel] : undefined,
             toppings: item.toppings?.map(t => ({
               ...t,
               name: map[t.id] || t.name
@@ -91,7 +140,7 @@ export default function Cart() {
         const names = ids.map(id => menuMap[id]);
         const staticTexts = [
           'Cart', 'Order type:', 'Your cart is empty.', 'Remove', 'Continue Ordering', 'Checkout',
-          'Ice:', 'Sweetness:', 'Toppings:', 'Total:'
+          'Ice:', 'Sweetness:', 'Size:', 'Toppings:', 'Total:'
         ];
         const promises: Promise<string>[] = [];
         names.forEach(n => promises.push(translate(n)));
@@ -118,6 +167,24 @@ export default function Cart() {
     setCartItems(prev => prev.filter((_, i) => i !== index));
   };
 
+  const increaseQuantity = (index: number) => {
+    setCartItems(prev =>
+      prev.map((it, i) => (i === index ? { ...it, quantity: it.quantity + 1 } : it))
+    );
+  };
+
+  const decreaseQuantity = (index: number) => {
+    setCartItems(prev => {
+      const item = prev[index];
+      if (!item) return prev;
+      if (item.quantity > 1) {
+        return prev.map((it, i) => (i === index ? { ...it, quantity: it.quantity - 1 } : it));
+      }
+      // if quantity would go to 0, remove the item
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleOrder = () => {
     navigate("/kiosk/order", { state: { orderType: orderType } });
   };
@@ -126,11 +193,14 @@ export default function Cart() {
     navigate("/kiosk/checkout", { state: { orderType: orderType } });
   };
 
-  const getItemDetails = (item: CartItem & { iceLevelName?: string; sweetnessLevelName?: string }) => {
+  const getItemDetails = (item: CartItem & { iceLevelName?: string; sweetnessLevelName?: string; sizeLevelName?: string }) => {
     const mods: string[] = [];
 
     if (item.iceLevelName) mods.push(`${translatedStatics['Ice:'] ?? t('Ice:')} ${translatedMenuMap[item.iceLevel as number] ?? item.iceLevelName}`);
     if (item.sweetnessLevelName) mods.push(`${translatedStatics['Sweetness:'] ?? t('Sweetness:')} ${translatedMenuMap[item.sweetnessLevel as number] ?? item.sweetnessLevelName}`);
+    if (item.sizeLevelName) {
+      mods.push(`${translatedStatics['Size:'] ?? t('Size:')} ${translatedMenuMap[item.sizeLevel as number] ?? item.sizeLevelName}`);
+    }
     if (item.toppings && item.toppings.length > 0) {
       mods.push(`${translatedStatics['Toppings:'] ?? t('Toppings:')} ${item.toppings.map(t => translatedMenuMap[t.id] ?? t.name).join(", ")}`);
     }
@@ -154,6 +224,12 @@ export default function Cart() {
                 )}
               </div>
               
+              <div className="quantity-controls">
+                <button onClick={() => decreaseQuantity(index)} className="qty-btn decrement" aria-label="Decrease quantity">-</button>
+                <span className="qty-display" aria-hidden="true">{item.quantity}</span>
+                <button onClick={() => increaseQuantity(index)} className="qty-btn increment" aria-label="Increase quantity">+</button>
+              </div>
+
               <button onClick={() => removeFromCart(index)} className="remove-btn">
                 {translatedStatics['Remove'] ?? t('Remove')}
               </button>
@@ -163,6 +239,7 @@ export default function Cart() {
         
         </>
       )}
+
         <h3 className="cart-total">{(translatedStatics['Total:'] ?? t('Total:'))} ${total.toFixed(2)}</h3>
         <div className="cart-actions">
           <button className="back-btn" onClick={handleOrder}>{translatedStatics['Continue Ordering'] ?? t('Continue Ordering')}</button>
@@ -177,6 +254,9 @@ export default function Cart() {
         magnifyMode={magnifyMode}
         useLens={useLens}
       />
+      <button onClick={startCartTutorial} className="floating-circle-btn">
+        ?
+      </button>
     </div>
   );
 }

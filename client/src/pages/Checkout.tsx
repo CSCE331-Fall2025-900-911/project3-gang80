@@ -6,11 +6,57 @@ import { useMagnifyMode } from "../contexts/MagnifyModeContext";
 import { useMagnifier } from "../hooks/useMagnifier";
 import { MagnifierLens } from "../components/MagnifierLens";
 import { useTranslation } from "../contexts/TranslationContext";
+import { makeApiCall } from "../globals";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+
+const startCheckoutTutorial = () => {
+  const tour = driver({
+    showProgress: true,
+    steps: [
+      {
+        element: ".checkout-page h1",
+        popover: {
+          title: "Welcome to Checkout!",
+          description: "Review your order summary and select a payment method to complete your purchase.",
+          side: "bottom",
+          align: "center",
+        },
+      },
+      {
+        element: ".checkout-summary",
+        popover: {
+          title: "Order Summary",
+          description: "Here you can see the details of your order including items, subtotal, tax, and total amount.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".payment-section",
+        popover: {
+          title: "Payment Method",
+          description: "Select your preferred payment method from the dropdown menu.",
+          side: "top",
+          align: "center",
+        },
+      },
+      {
+        element: ".checkout-actions",
+        popover: {
+          title: "Complete Your Order",
+          description: "Use these buttons to go back to your cart or confirm your order.",
+          side: "top",  
+          align: "center",
+        },
+      },
+    ],
+  });
+  tour.drive();
+}
 
 
 export default function Cart() {
-  const API_URL = "https://project3-gang80.onrender.com";
-  //const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
   const navigate = useNavigate();
   const { highContrast } = useContrastMode();
@@ -27,14 +73,93 @@ export default function Cart() {
     name: string;
     price: number;
     quantity: number;
+    sizeLevel?: number | null;
     toppings?: Array<{ id: number; name: string; price: number }>;
   }
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const [userRewards, setUserRewards] = useState<number | null>(null);
+  const [userId, setUserId] = useState<number | null>(null);
+  const [loadingRewards, setLoadingRewards] = useState(false);
+  const [menuMap, setMenuMap] = useState<Record<number, string>>({});
+  const [rewardsError, setRewardsError] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const API_URL = "https://project3-gang80.onrender.com";
+    fetch(`${API_URL}/api/db/menu_items`)
+      .then(res => res.json())
+      .then(data => {
+        const map: Record<number, string> = {}
+        data.items.forEach((item: any) => {
+          map[item.id] = item.name;
+        });
+        setMenuMap(map);
+      })
+      .catch(err => console.error("Failed to fetch menu items:", err));
+  }, []);
+
+  const getSizeLabel = (sizeLevel: number | null | undefined): string => {
+    if (!sizeLevel || !menuMap[sizeLevel]) return '';
+    
+    const sizeName = menuMap[sizeLevel].toLowerCase();
+    
+    if (sizeName.includes('medium') || sizeName === 'm') {
+      return 'M';
+    } else if (sizeName.includes('large') || sizeName === 'l') {
+      return 'L';
+    }
+    
+    return sizeName.charAt(0).toUpperCase();
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("cartItems");
     setCartItems(saved ? JSON.parse(saved) : []);
+  }, []);
+
+  // Fetch user rewards if logged in
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('user_id');
+    if (!storedUserId) {
+      setUserId(null);
+      setUserRewards(null);
+      return;
+    }
+    
+    const uid = Number(storedUserId);
+    if (Number.isNaN(uid)) {
+      setUserId(null);
+      setUserRewards(null);
+      return;
+    }
+    
+    setUserId(uid);
+    setLoadingRewards(true);
+    
+    async function fetchUserRewards() {
+      try {
+        const data = await makeApiCall('/api/db/users', 'GET', null) as { users: any[] };
+        const users = data?.users || [];
+        const user = users.find(u => u.id === uid);
+        if (user) {
+          setUserRewards(Number(user.rewards) || 0);
+          setRewardsError(null);
+        } else {
+          setUserRewards(null);
+          setRewardsError('User not found');
+        }
+      } catch (e) {
+        console.error('Failed to fetch rewards:', e);
+        setUserRewards(null);
+        setRewardsError('Failed to load rewards');
+      } finally {
+        setLoadingRewards(false);
+      }
+    }
+    
+    fetchUserRewards();
   }, []);
 
   // Translate static labels and item names when language changes
@@ -71,17 +196,18 @@ export default function Cart() {
   }, [language, cartItems]);
 
 
-  const [paymentMethod, setPaymentMethod] = useState<string>("");
-
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
   const tax = subtotal * 0.0825;
   const total = subtotal + tax;
+  const requiredPearls = Math.ceil(total);
 
   const handlePaymentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPaymentMethod(e.target.value);
+    // Clear error when changing payment method
+    setRewardsError(null);
   };
 
   const handleConfirmOrder = async () => {
@@ -90,11 +216,25 @@ export default function Cart() {
       return;
     }
 
+    // Validate Pearl Rewards payment
+    if (paymentMethod === "Pearls") {
+      if (userRewards === null) {
+        alert("Unable to verify rewards balance. Please try again.");
+        return;
+      }
+      if (userRewards < requiredPearls) {
+        const shortage = requiredPearls - userRewards;
+        alert(`Insufficient pearls. You need ${requiredPearls} pearls but only have ${userRewards}. You are ${shortage} pearls short.`);
+        return;
+      }
+    }
+
     // Build order payload for Flask backend
     const orderData = {
-      customer_id: null, // guest checkout
+      customer_id: userId, // include customer ID if using Pearl Rewards
       total_price: total,
       pearls_earned: Math.floor(total / 10),
+      pearls_redeemed: paymentMethod === "Pearls" ? requiredPearls : undefined,
       payment_method: paymentMethod,
       order_type: orderType, // dine-in / takeout
       employee_id: 1, // default employee
@@ -105,26 +245,13 @@ export default function Cart() {
     };
 
     try {
-      const resp = await fetch(`${API_URL}/api/db/orders/create`, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(orderData),
-      });
+      const data = await makeApiCall('/api/db/orders/create', 'POST', orderData);
 
-      // Log the actual response for debugging
-      console.log("Response status:", resp.status);
-
-      if (!resp.ok) {
-        const text = await resp.text();
-        console.error("Failed to create order:", text);
+      if (!data) {
         alert("There was an error processing your order. Please try again.");
         return;
       }
 
-      const data = await resp.json();
       console.log("Order confirmed!", data);
 
       localStorage.removeItem("cartItems");
@@ -146,22 +273,30 @@ export default function Cart() {
 
   return (
     <div className={`checkout-page ${highContrast ? "high-contrast" : ""} ${magnifyMode ? 'magnify' : ''}`} onMouseMove={(e) => handleMouseMove(e, magnifyMode)}>
+      
       <h1>{translatedStatics['Checkout'] ?? t('Checkout')}</h1>
       <p>{(translatedStatics['Order type:'] ?? t('Order type:'))} {orderType}</p>
 
       <div className="checkout-summary">
         <h2>{translatedStatics['Order Summary'] ?? t('Order Summary')}</h2>
         <ul>
-          {cartItems.map((item, index) => (
-            <li key={index}>
-              {(translatedNames[index] ?? item.name)} 
-              {item.toppings && item.toppings.length > 0 && (
-                <> + {item.toppings.map(t => t.name).join(", ")}</>
-              )}
-              {" - $"}
-              {item.price.toFixed(2)} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
-            </li>
-          ))}
+          {cartItems.map((item, index) => {
+            const sizeLabel = getSizeLabel(item.sizeLevel);
+            return (
+              <li key={index}>
+                <span>
+                  {sizeLabel && <strong>[{sizeLabel}] </strong>}
+                  {(translatedNames[index] ?? item.name)} 
+                  {item.toppings && item.toppings.length > 0 && (
+                    <> + {item.toppings.map(t => t.name).join(", ")}</>
+                  )}
+                </span>
+                <span>
+                  ${item.price.toFixed(2)} × {item.quantity} = ${(item.price * item.quantity).toFixed(2)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
         <h3>{translatedStatics['Subtotal:'] ?? t('Subtotal:')} ${subtotal.toFixed(2)}</h3>
         <h3>{translatedStatics['Tax:'] ?? t('Tax:')} ${tax.toFixed(2)}</h3>
@@ -170,11 +305,44 @@ export default function Cart() {
 
       <div className="payment-section">
         <h2>{translatedStatics['Select Payment Method'] ?? t('Select Payment Method')}</h2>
+        {userId && userRewards !== null && (
+          <div className="rewards-info" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem' }}>
+            <p style={{ margin: 0, fontSize: '0.95rem' }}>
+              <strong>Your Pearl Rewards:</strong> {userRewards} pearls
+              {paymentMethod === "Pearls" && (
+                <span style={{ marginLeft: '0.5rem', color: userRewards >= requiredPearls ? '#059669' : '#dc2626' }}>
+                  ({userRewards >= requiredPearls ? 'Sufficient' : `Need ${requiredPearls - userRewards} more`})
+                </span>
+              )}
+            </p>
+          </div>
+        )}
+        {loadingRewards && <p style={{ fontSize: '0.9rem', color: '#6b7280' }}>Loading rewards...</p>}
+        {rewardsError && !loadingRewards && (
+          <div className="error-message" style={{ marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#991b1b' }}>
+            <strong>Error:</strong> {rewardsError}
+          </div>
+        )}
         <select value={paymentMethod} onChange={handlePaymentChange}>
           <option value="">{translatedStatics['--Select--'] ?? t('--Select--')}</option>
           <option value="Credit Card">{translatedStatics['Credit Card'] ?? t('Credit Card')}</option>
           <option value="Cash">{translatedStatics['Cash'] ?? t('Cash')}</option>
+          {userId && userRewards !== null && (
+            <option value="Pearls">Pearls ({userRewards} available)</option>
+          )}
         </select>
+        {paymentMethod === "Pearls" && userRewards !== null && userRewards >= requiredPearls && (
+          <div className="pearls-deduction-notice" style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#ecfdf5', border: '1px solid #86efac', borderRadius: '0.5rem', color: '#065f46' }}>
+            <p style={{ margin: 0, fontSize: '0.95rem' }}>
+              <strong>Note:</strong> {requiredPearls} pearls will be deducted from your account when you confirm this order.
+            </p>
+          </div>
+        )}
+        {paymentMethod === "Pearls" && userRewards !== null && userRewards < requiredPearls && (
+          <div className="error-message" style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '0.5rem', color: '#991b1b' }}>
+            <strong>Insufficient Pearls:</strong> You need {requiredPearls} pearls to complete this order, but you only have {userRewards}. Please select a different payment method.
+          </div>
+        )}
       </div>
 
       <div className="checkout-actions">
@@ -193,6 +361,9 @@ export default function Cart() {
         magnifyMode={magnifyMode}
         useLens={useLens}
       />
+      <button onClick={startCheckoutTutorial} className="floating-circle-btn">
+        ?
+      </button>
     </div>
   );
 }
