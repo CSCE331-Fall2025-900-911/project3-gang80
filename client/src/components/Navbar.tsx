@@ -87,7 +87,7 @@ function Navbar() {
 
         {seeNavButton("cashier") && (
           <li>
-            <NavLink to="/" end>
+            <NavLink to="/cashier" end>
               Cashier
             </NavLink>
           </li>

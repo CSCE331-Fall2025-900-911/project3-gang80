@@ -5,46 +5,9 @@ import { useMagnifyMode } from "../contexts/MagnifyModeContext";
 import { useMagnifier } from "../hooks/useMagnifier";
 import { MagnifierLens } from "../components/MagnifierLens";
 import { makeApiCall } from "../globals";
-import { driver } from "driver.js"; 
 import "driver.js/dist/driver.css";
 import "../css/Confirmation.css";
 
-
-const startConfirmationTutorial = () => {
-    const tour = driver({
-        showProgress: true,
-        steps: [
-            {
-                element: ".confirmation-page h1",
-                popover: {
-                    title: "Order Confirmed!",
-                    description: "Your order has been successfully placed. You can find your order number here.",
-                    side: "bottom",
-                    align: "center",
-                },  
-            },
-            {
-                element: ".confirmation-page h2",
-                popover: {
-                    title: "Order Number",
-                    description: "This is your unique order number. Please keep it for your reference.",
-                    side: "top",
-                    align: "center",
-                },
-            },
-            {
-                element: ".confirmation-page button",
-                popover: {
-                    title: "Order More",
-                    description: "Click this button to return to the kiosk and place another order.",
-                    side: "top",
-                    align: "center",
-                },
-            },
-        ],
-    });
-    tour.drive();
-}
 
 interface Order {
     id: number;

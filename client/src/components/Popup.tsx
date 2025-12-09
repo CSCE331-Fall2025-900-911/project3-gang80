@@ -47,10 +47,12 @@ interface PopupProps {
   onAdd: (
     iceLevel: number | null,
     sweetnessLevel: number | null,
+    sizeLevel: number | null,
     toppings: Array<{ id: number; name: string; price: number }>
   ) => void;
   title: string;
   imgName: string;
+  price: number;
 }
 
 interface ModificationItem {
@@ -62,7 +64,7 @@ interface ModificationItem {
   img_name?: string | null;
 }
 
-function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
+function Popup({ onClose, onAdd, title, imgName, price }: PopupProps) {
   const [mods, setMods] = useState<Record<string, ModificationItem[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +72,7 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
   const [selectedSweetness, setSelectedSweetness] = useState<number | null>(null);
   const [selectedToppings, setSelectedToppings] = useState<Record<number, boolean>>({});
   const [validationMsg, setValidationMsg] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<number | null>(null);
   const { highContrast } = useContrastMode();
   const { language, translate, t } = useTranslation();
   const [translatedNames, setTranslatedNames] = useState<Record<number, string>>({});
@@ -162,8 +165,12 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
     const nameVal = item.name?.toLowerCase() || '';
     const catVal = (item.category || '')?.toLowerCase() || '';
     
-    let kind: 'ice' | 'sweetness' | 'toppings' | 'other';
-    if (nameVal.includes('ice') && !nameVal.includes('ice cream')) kind = 'ice';
+    let kind: 'ice' | 'sweetness' | 'size' | 'toppings' | 'other';
+    if (nameVal.includes('size') || catVal.includes('size')) {
+        kind = 'size';
+    }
+    
+    else if ((nameVal.includes('ice') || nameVal.includes('hot')) && !nameVal.includes('ice cream')) kind = 'ice';
     else if (nameVal.includes('sweetness') || nameVal.includes('sweet') || nameVal.includes('no sugar') || nameVal.includes('sugar')) kind = 'sweetness';
     else if (
       nameVal.includes('topping') ||
@@ -179,7 +186,11 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
     else if (catVal.includes('topping') || catVal.includes('boba') || catVal.includes('jelly') || catVal.includes('pudding')) kind = 'toppings';
     else kind = 'other';
 
-    if (kind === 'ice') {
+    if (kind === 'size') {
+        setSelectedSize(prev => (prev === item.id ? null : item.id));
+        setValidationMsg(null);
+    }
+    else if (kind === 'ice') {
       setSelectedIce((prev) => (prev === item.id ? null : item.id));
       setValidationMsg(null);
     } else if (kind === 'sweetness') {
@@ -195,8 +206,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
 
 
   const handleAdd = () => {
-    if (!selectedIce || !selectedSweetness) {
-      setValidationMsg("Please select both Sweetness Level and Ice Level.");
+    if (!selectedIce || !selectedSweetness || !selectedSize) {
+      setValidationMsg("Please select both Sweetness Level, Ice Level, and Drink Size");
       return;
     }
     setValidationMsg(null);
@@ -205,28 +216,42 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
       .filter(([_, selected]) => selected)
       .map(([id]) => {
         const topping = Object.values(mods).flat().find((mod) => mod.id === Number(id));
-        return { id: Number(id), name: topping?.name || "", price: topping?.price || 0 };
+        // Each topping costs $0.75
+        return { id: Number(id), name: topping?.name || "", price: 0.75 };
       });
 
-    onAdd(selectedIce, selectedSweetness, selectedToppingsArray);
+    onAdd(selectedIce, selectedSweetness, selectedSize, selectedToppingsArray);
   };
 
-  const selectionsComplete = !!selectedIce && !!selectedSweetness;
+  const selectionsComplete = !!selectedIce && !!selectedSweetness && !!selectedSize;
+
+  // Calculate current price with selected toppings ($0.75 each) and large size (+$0.75)
+  const selectedToppingsCount = Object.values(selectedToppings).filter(Boolean).length;
+  
+  // Check if selected size is "large"
+  const allItems = Object.values(mods).flat();
+  const selectedSizeItem = allItems.find(item => item.id === selectedSize);
+  const isSizeLarge = selectedSizeItem?.name?.toLowerCase().includes('large') || false;
+  
+  const currentPrice = price + (selectedToppingsCount * 0.75) + (isSizeLarge ? 0.75 : 0);
 
   return (
     <div className={`popup ${highContrast ? "high-contrast" : ""}`}>
       <div className="background">
-
         <div className="popup-bar">
             <button onClick={onClose} className="popup-button">{translatedStatics['Close'] ?? t('Close')}</button>
             <h2 className="text-xl font-semibold">{translatedStatics['Customization'] ?? t('Customization')}</h2>
-            <button onClick={startPopupTutorial} className="popup-button tutorial-btn">How to customize</button>
-            <button
-              onClick={handleAdd}
-              className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
-            >
-              {translatedStatics['Add'] ?? t('Add')}
-            </button> 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{ fontSize: '1.125rem', fontWeight: '600', color: '#D3191C' }}>
+                ${currentPrice.toFixed(2)}
+              </span>
+              <button
+                onClick={handleAdd}
+                className={`popup-button-1 ${!selectionsComplete ? 'border-red-600' : ''}`}
+              >
+                {translatedStatics['Add'] ?? t('Add')}
+              </button>
+            </div>
         </div>
 
         {validationMsg && (
@@ -255,16 +280,20 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                   // Group into Ice, Sweetness, Toppings and then render other categories below
                   (() => {
                     let iceItems: ModificationItem[] = [];
+                    let sizeItems: ModificationItem[] = [];
                     let sweetItems: ModificationItem[] = [];
                     const toppingItems: ModificationItem[] = [];
                     const otherGroups: Array<{ cat: string; items: ModificationItem[] }> = [];
 
                     Object.entries(mods).forEach(([category, items]) => {
-                      function categorize(name: string, cat: string): 'ice' | 'sweetness' | 'toppings' | 'other' {
+                      function categorize(name: string, cat: string): 'ice' | 'sweetness' | 'size' | 'toppings' | 'other' {
                         const nameVal = name?.toLowerCase() || '';
                         const catVal = cat?.toLowerCase() || '';
                         
+                        if (nameVal.includes('hot')) return 'ice';
+
                         // Check name first (more specific)
+                        if (nameVal.includes('size') || catVal.includes('size')) return 'size';
                         if (nameVal.includes('ice') && !nameVal.includes('ice cream')) return 'ice';
                         if (nameVal.includes('sweetness') || nameVal.includes('sweet') || nameVal.includes('no sugar') || nameVal.includes('sugar')) return 'sweetness';
                         if (
@@ -289,8 +318,8 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                       // Categorize each item individually (more robust than using the group key)
                       items.forEach((item) => {
                         const kind = categorize(item.name, item.category || category);
-
-                        if (kind === 'ice') iceItems.push(item);
+                        if (kind === 'size') sizeItems.push(item);
+                        else if (kind === 'ice') iceItems.push(item);
                         else if (kind === 'sweetness') sweetItems.push(item);
                         else if (kind === 'toppings') toppingItems.push(item);
                         else {
@@ -313,18 +342,18 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                       });
                     };
 
-                    sweetItems = sortByPreference(sweetItems, ['regular', 'half', 'no sugar']);
-                    iceItems = sortByPreference(iceItems, ['regular', 'less', 'no ice']);
+                    sweetItems = sortByPreference(sweetItems, ['extra sweetness', 'regular', 'half', 'no sugar']);
+                    iceItems = sortByPreference(iceItems, ['extra ice', 'regular', 'less', 'no ice', 'hot']);
 
                     // Prepare slices to match requested visual counts
-                    const iceSlice = iceItems.slice(0, 4);
+                    const iceSlice = iceItems.slice(0, 5);
                     const sweetSlice = sweetItems.slice(0, 4);
                     const toppingSlice = toppingItems.slice(0, 10);
 
                     return (
                       <div>
                         {/* Three columns: Sweetness | Ice | Toppings */}
-                        <div className="grid grid-cols-3 gap-4 mb-2">
+                        <div className="grid grid-cols-4 gap-4 mb-2">
                           <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
                             <h2 className="text-lg font-medium mb-2">{translatedStatics['Sweetness Level'] ?? t('Sweetness Level')}</h2>
                             <div className="flex flex-wrap gap-3 justify-center">
@@ -355,6 +384,30 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
                                     className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${selected ? 'bg-red-600 text-white border-black' : 'bg-white border-gray-300 hover:bg-gray-100'}`}
                                   >
                                     {it.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          <div className="category-col col-span-1 bg-white rounded p-3 max-w-[350px]">
+                            <h2 className="text-lg font-medium mb-2">
+                              {translatedStatics['Drink Size'] ?? 'Drink Size'}
+                            </h2>
+                            <div className="flex flex-wrap gap-3 justify-center">
+                              {sizeItems.map((it) => {
+                                const selected = selectedSize === it.id;
+                                return (
+                                  <button
+                                    key={it.id}
+                                    onClick={() => handleSelect(it)}
+                                    className={`cat-butt ${selected ? "selected" : ""} w-full px-4 py-2 border rounded transition ${
+                                      selected
+                                        ? 'bg-red-600 text-white border-black'
+                                        : 'bg-white border-gray-300 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    {translatedNames[it.id] ?? it.name}
                                   </button>
                                 );
                               })}
@@ -408,6 +461,9 @@ function Popup({ onClose, onAdd, title, imgName }: PopupProps) {
             </div>
           </div>
         </div>
+        <button onClick={startPopupTutorial} className="popup-floating-btn">
+          ?
+        </button>
 
       </div>
     </div>
