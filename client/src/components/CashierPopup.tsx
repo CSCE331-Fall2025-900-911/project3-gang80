@@ -13,6 +13,7 @@ interface CashierPopupProps {
         sweetness_label?: string;
         topping_names?: string[];
         toppings_total?: number;
+        quantity?: number;
     }) => void;
 }
 
@@ -33,6 +34,7 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
     const [selectedIce, setSelectedIce] = useState<number | null>(null);
     const [selectedSweetness, setSelectedSweetness] = useState<number | null>(null);
     const [selectedToppings, setSelectedToppings] = useState<Record<number, boolean>>({});
+    const [quantity, setQuantity] = useState<number>(1);
 
     useEffect(() => {
         let cancelled = false;
@@ -145,6 +147,22 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Customize Your Drink</h2>
                     <div className="flex items-center gap-3">
+                        {/* Quantity Selector */}
+                        <div className="flex items-center gap-2 border border-gray-300 rounded px-3 py-1">
+                            <button
+                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                className="text-lg font-bold px-2 hover:bg-gray-100 rounded transition"
+                            >
+                                −
+                            </button>
+                            <span className="text-lg font-semibold min-w-[2rem] text-center">{quantity}</span>
+                            <button
+                                onClick={() => setQuantity(Math.min(20, quantity + 1))}
+                                className="text-lg font-bold px-2 hover:bg-gray-100 rounded transition"
+                            >
+                                +
+                            </button>
+                        </div>
                         <button
                             onClick={() => {
                                 if (!selectionsComplete) return;
@@ -167,6 +185,7 @@ export default function CashierPopup({ onClose, selectedItem, onEdit, onAdd }: C
                                     sweetness_label,
                                     topping_names,
                                     toppings_total,
+                                    quantity,
                                 });
                             }}
                             className={`px-4 py-2 rounded cursor-pointer transition active:scale-[0.97] ${!selectionsComplete ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-red-600 text-white hover:brightness-110"}`}
