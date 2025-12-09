@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { makeApiCall } from "../globals";
 
 function LoginButton() {
+  const navigate = useNavigate();
   const [initialized, setInitialized] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem("id_token"));
 
@@ -9,11 +11,15 @@ function LoginButton() {
   function cleanupAuthState() {
     localStorage.removeItem("id_token");
     localStorage.removeItem("user_role");
+    localStorage.removeItem("user_id");
     window.dispatchEvent(new Event('storage_changed'));
     setIsLoggedIn(false);
     
     // Reset Google Sign-In state to allow re-initialization
     setInitialized(false);
+    
+    // Navigate to login page on sign out
+    navigate("/login");
   }
 
   // Callback executed when user signs in successfully
@@ -35,6 +41,9 @@ function LoginButton() {
         console.log("User role set to:", loginResponse.user_role);
         window.dispatchEvent(new Event('storage_changed'));
         setIsLoggedIn(true);
+        
+        // Navigate to portal after successful login
+        navigate("/portal");
       } else {
         // Backend call failed or returned invalid data - cleanup
         console.error("Login failed: Invalid response from backend");

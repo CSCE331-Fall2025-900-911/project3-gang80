@@ -1,16 +1,33 @@
-import * as React from "react";
-import IngredientGrid from "../components/IngredientGrid";
-import InventoryPopup from "../components/InventoryPopup";
-import { useContrastMode } from '../contexts/ContrastModeContext';
 import { useEffect } from "react";
-import { API_URL } from "../globals";
-
+import LoginButton from "../components/LoginButton";
+import logo from "../assets/sharetea_logo.png";
+import "../css/LoginPage.css";
 
 export default function LoginPage() {
-  // Blank placeholder page for /login route
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, []);
+
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <h1 className="text-center font-bold">Please log in to continue</h1>
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-logo-container">
+          <img 
+            src={logo} 
+            alt="Sharetea Logo" 
+            className="login-logo"
+          />
+        </div>
+        <h1 className="login-title">Welcome to Sharetea</h1>
+        <p className="login-subtitle">Please log in to continue</p>
+        <div className="login-button-container">
+          <LoginButton />
+        </div>
+      </div>
     </div>
   );
 }
