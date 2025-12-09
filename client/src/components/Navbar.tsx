@@ -8,6 +8,7 @@ function Navbar() {
   // Define which role integers have access to each nav item.
   // Adjust these arrays to match your app's role integers.
   const ACCESS: Record<string, number[]> = {
+    loginPage: [0],
     cashier: [ 3, 4, 5],
     inventory: [ 3, 4, 5],
     employees: [ 4, 5],

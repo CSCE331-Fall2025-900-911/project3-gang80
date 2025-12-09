@@ -10,6 +10,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Confirmation from "./pages/Confirmation";
 import MenuBoard from "./pages/MenuBoard";
+import LoginPage from "./pages/LoginPage";
 import './App.css'
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -44,6 +45,7 @@ function App() {
       <div className="app-container" style={{ marginLeft: hideNavbar ? "0px" : "250px" }}>
         <Routes>
           <Route path="/" element={<Cashier />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/employees" element={<Employees />} />
           <Route path="/analytics" element={<Analytics />} />
