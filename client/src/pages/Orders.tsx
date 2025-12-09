@@ -63,6 +63,7 @@ interface CartItem {
   quantity: number;
   iceLevel?: number | null;
   sweetnessLevel?: number | null;
+  sizeLevel?: number | null;
   toppings?: Array<{ id: number; name: string; price: number }>;
 }
 
@@ -70,7 +71,9 @@ export default function Orders() {
   const API_URL = "https://project3-gang80.onrender.com"; // switch this to localhost 5000 when testing
   //const API_URL = "http://127.0.0.1:5000";
   const location = useLocation();
-  const orderType = (location.state as { orderType: string })?.orderType || "unknown";
+  const orderType =
+  (location.state as { orderType?: string } | null)?.orderType ?? "Dine-In";
+
   const [selected, setSelected] = useState<string>("Milk Tea");
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
@@ -284,13 +287,15 @@ export default function Orders() {
     drink: { id: number; name: string; price: number; img_name?: string | null; },
     iceLevel?: number | null,
     sweetnessLevel?: number | null,
-    toppings?: Array<{ id: number; name: string; price: number }>
+    toppings?: Array<{ id: number; name: string; price: number }>,
+    sizeLevel?: number | null,
   ) => {
     const existing = cartItems.findIndex(
       (item) =>
         item.id === drink.id &&
         item.iceLevel === iceLevel &&
         item.sweetnessLevel === sweetnessLevel &&
+        item.sizeLevel === sizeLevel &&
         JSON.stringify(item.toppings?.map(t => t.id).sort()) === JSON.stringify(toppings?.map(t => t.id).sort())
     );
 
@@ -312,6 +317,7 @@ export default function Orders() {
           quantity: 1,
           iceLevel,
           sweetnessLevel,
+          sizeLevel,
           toppings
         },
       ]);
@@ -346,8 +352,8 @@ export default function Orders() {
         )}
 
         {selected === "Recommended" && (
-          <div className="recommended-text" style={{ margin: "0px 0px 20px 0px" }}>
-            <label style={{ marginRight: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+          <div className="recommended-text">
+            <label className="recommended-label">
               <span> {translatedRecPrefix ?? 'Since it is'} {recommendedTemp !== null ? `${recommendedTemp}°F` : '...'} {translatedRecSuffix ?? 'outside,'}</span>
               <span> {translatedRecSuffix ?? 'this is the drink we recommend!'}</span>
             </label>
@@ -355,7 +361,7 @@ export default function Orders() {
         )}
 
         <div className="accessibility-buttons">
-          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} /></button>
+          <button className="circle-btn" aria-label="Choose language" onClick={() => setShowLangSelector(true)}><img src={languageIcon} alt="Language Icon"/></button>
           <button
             className={`circle-btn ${magnifyMode ? 'active' : ''}`}
             aria-label="Enable text magnification"
@@ -368,18 +374,12 @@ export default function Orders() {
             }}
             title={magnifyMode ? 'Disable Magnifier' : 'Enable Magnifier'}
           >
-            <img src={magnifyIcon} />
+            <img src={magnifyIcon} alt="Magnify Icon" />
           </button>
-          <button className="circle-btn contrast-btn" aria-label="Toggle high contrast" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon} /></button>
+          <button className="circle-btn contrast-btn" aria-label="Toggle high contrast" onClick={() => setHighContrast(prev => !prev)}><img src={contrastIcon} alt="Contrast Icon"/></button>
         </div>
         <div className = "weather-container">
           <Weather />
-        </div>
-
-        <div style={{ marginTop: "20px", textAlign: "center" }}>
-          <button onClick={startOrderTutorial} className="tutorial-btn">
-    How to Order
-          </button>
         </div>
         
         {/* Drink Grid */}
@@ -387,10 +387,14 @@ export default function Orders() {
           {drinks.map((d) => (
             <button
               key={d.id}
-              className="drink-btn"
-              title={d.description || d.name}
-              onClick={() => handleOpenPopup(d)}
+              className={`drink-btn ${d.name === 'Lava Flow' ? 'seasonal-item' : ''}`}
+                title={d.description || d.name}
+                onClick={() => handleOpenPopup(d)}
             >
+              {/* Red star for seasonal item named "Lava Flow" */}
+                {(d.name === 'Lava Flow') && (
+                  <span aria-hidden="true" className="seasonal-star">★</span>
+                )}
               <div className="drink-tile-img"><DrinkImage drink={d.img_name ?? ""} size={140}/></div>
               <div className="drink-tile-name">{translatedDrinkNames[d.id] ?? d.name}</div>
               <div className="drink-tile-price">${d.price.toFixed(2)}</div>
@@ -400,14 +404,15 @@ export default function Orders() {
           {showPopup && selectedDrink && (
           <Popup
             onClose={handleClosePopup}
-            onAdd={(ice, sweet, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings)}
+            onAdd={(ice, sweet, size, toppings) => handleDrinkSelect(selectedDrink!, ice, sweet, toppings, size)}
             title={selectedDrink.name}
             imgName={selectedDrink.img_name ?? ""}
+            price={selectedDrink.price}
           />
         )}
 
         {drinks.length === 0 && (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", opacity: 0.7 }}>
+          <div className="no-items">
             No items found.
           </div>
         )}
@@ -422,9 +427,8 @@ export default function Orders() {
           magnifyMode={magnifyMode}
           useLens={useLens}
         />
-        <div>
+        <div className="action-buttons">
           <button
-            style={{ marginTop: "20px" }}
             onClick={() =>
               navigate("/kiosk/cart", { state: { orderType: orderType, cartItems: cartItems} })}
             className="view-cart-btn">
@@ -432,14 +436,23 @@ export default function Orders() {
           </button>
 
           <button
-            style={{ marginTop: "20px", marginLeft: "12px" }}
             onClick={() => navigate("/kiosk/menu-board")}
             className="view-menu-btn"
           >
             View Menu
           </button>
         </div>
+
+        <div className="seasonal-legend" aria-hidden={false} role="note">
+          <span className="seasonal-legend-star">★</span>
+          <span>= Seasonal Drink</span>
+        </div>
       </div>
+      {!showPopup && (
+        <button onClick={startOrderTutorial} className="floating-circle-btn">
+          ?
+        </button>
+      )}
     </div>
   );
 }

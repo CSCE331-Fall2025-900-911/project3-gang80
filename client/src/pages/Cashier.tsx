@@ -28,6 +28,7 @@ export default function Cashier() {
 			topping_ids: number[];
 			ice_label?: string;
 			sweetness_label?: string;
+			size_label?: string;
 			topping_names?: string[];
 			toppings_total?: number;
 		};
@@ -35,13 +36,15 @@ export default function Cashier() {
 
 	const { resetContrast } = useContrastMode();
 
+	const [selectedCategory, setSelectedCategory] = useState<string>("Milk Tea");
+
 	useEffect(() => {
 		localStorage.removeItem("cartItems");
 		resetContrast(); // ensure contrast is OFF on non-kiosk routes
 	}, []);
 
 	// Categories for base drinks
-	const CATEGORIES = [
+	const drinkCategories = [
 		"Milk Tea",
 		"Fruit Tea",
 		"Matcha",
@@ -57,7 +60,7 @@ export default function Cashier() {
 			setError(null);
 			try {
 				const results = await Promise.all(
-					CATEGORIES.map(async (cat) => {
+					drinkCategories.map(async (cat) => {
 						const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
 						return (data.items || []).map((d: any) => ({
 							id: d.id,
@@ -217,17 +220,32 @@ export default function Cashier() {
 		<>
 			<div className="w-full h-screen flex bg-gray-100">
 				<div className="flex-1 p-6 overflow-y-auto">
+					{/* Category Bar */}
+					<div className="category-bar">
+						{drinkCategories.map((category) => (
+							<button
+								key={category}
+								className={`category-btn ${category === selectedCategory ? "active" : ""}`}
+								onClick={() => setSelectedCategory(category)}
+							>
+								{category}
+							</button>
+						))}
+					</div>
 					{loading && <p className="text-center text-sm text-gray-600">Loading menu...</p>}
 					{error && <p className="text-center text-red-600">{error}</p>}
 					{!loading && !error && (
 						<div className="grid grid-cols-6 gap-4">
-							{items.map((item) => (
+							{items.filter(item => item.category === selectedCategory).map((item) => (
 								<button
 									key={item.id}
 									onClick={() => { setSelectedItem(item); setModalOpen(true); }}
-									className="relative group cursor-pointer bg-[#f3f3f3] border border-[#d0d5dd] rounded-lg min-h-44 w-full flex flex-col items-center px-2 pt-2 pb-3 shadow-sm transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-white focus:outline-none focus:ring-2 focus:ring-red-600 overflow-hidden"
+									className="relative group cursor-pointer bg-[#f3f3f3] border border-[#d0d5dd] rounded-lg min-h-44 w-full flex flex-col items-center px-2 pt-2 pb-3 shadow-sm transition-all duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-lg hover:bg-white focus:outline-none overflow-hidden"
 									title={item.name}
 								>
+									{item.name === 'Lava Flow' && (
+										<div className="absolute top-0.5 right-0.5 text-red-600 text-2xl pointer-events-none z-10">★</div>
+									)}
 									<div className="flex items-center justify-center h-32 w-full overflow-hidden px-2">
 										{item.img_name ? (
 											<DrinkImage drink={item.img_name} size={220} fill className="object-contain" />
@@ -257,6 +275,12 @@ export default function Cashier() {
 							)}
 						</div>
 					)}
+					{!loading && !error && items.length > 0 && (
+						<div className="flex items-center justify-center mt-4 text-sm text-gray-600">
+							<span className="text-red-600 text-xl mr-2">★</span>
+							<span>Seasonal Drink</span>
+						</div>
+					)}
 				</div>
 
 				<div className="w-80 bg-white border-l p-6 flex flex-col justify-between">
@@ -264,32 +288,51 @@ export default function Cashier() {
 						<div className="h-48 w-full bg-gray-200 rounded mb-2 p-3 overflow-y-auto">
 						{cartItems.length === 0 ? (
 							<div className="text-xs text-gray-600">Cart is empty</div>
-						) : (
-							cartItems.map((c) => {
-								const iceLabel = c.selections.ice_label ?? '';
-								const sweetLabel = c.selections.sweetness_label ?? '';
-								const toppingNames = c.selections.topping_names || [];
-								const selectionParts: string[] = [];
-								if (iceLabel) selectionParts.push(`Ice: ${iceLabel}`);
-								if (sweetLabel) selectionParts.push(`Sweet: ${sweetLabel}`);
-								if (toppingNames.length) selectionParts.push(toppingNames.join(', '));
+					) : (
+						cartItems.map((c) => {
+							const iceLabel = c.selections.ice_label ?? '';
+							const sweetLabel = c.selections.sweetness_label ?? '';
+							const sizeLabel = c.selections.size_label ?? '';
+							const toppingNames = c.selections.topping_names || [];
+							const selectionParts: string[] = [];
+							if (sizeLabel) selectionParts.push(`Size: ${sizeLabel}`);
+							if (iceLabel) selectionParts.push(`Ice: ${iceLabel}`);
+							if (sweetLabel) selectionParts.push(`Sweet: ${sweetLabel}`);
+							if (toppingNames.length) selectionParts.push(toppingNames.join(', '));
 								return (
-									<div key={c.id} className="flex items-center justify-between bg-white/70 rounded px-2 py-1 mb-2">
-										<div className="text-sm">
-											<div className="font-medium">{c.name} x{c.quantity}</div>
-											{selectionParts.length > 0 && (
-												<div className="text-[11px] text-gray-700">{selectionParts.join(' · ')}</div>
-											)}
-										</div>
-										<div className="flex items-center gap-2">
-											<div className="text-sm">${(c.price * c.quantity).toFixed(2)}</div>
+									<div key={c.id} className="flex flex-col bg-white/70 rounded px-2 py-2 mb-2">
+										<div className="flex items-start justify-between mb-1">
+											<div className="text-sm flex-1">
+												<div className="font-medium">{c.name}</div>
+												{selectionParts.length > 0 && (
+													<div className="text-[11px] text-gray-700">{selectionParts.join(' · ')}</div>
+												)}
+											</div>
 											<button
 												aria-label="Remove item"
-												className="w-6 h-6 leading-none flex items-center justify-center border border-gray-300 rounded text-red-600 bg-white"
+												className="w-6 h-6 leading-none flex items-center justify-center border border-gray-300 rounded text-red-600 bg-white hover:bg-gray-50 transition cursor-pointer ml-2"
 												onClick={() => setCartItems((prev) => prev.filter((p) => p.id !== c.id))}
 											>
 												x
 											</button>
+										</div>
+										<div className="flex items-center justify-between">
+											<div className="flex items-center gap-1 border border-gray-300 rounded px-2 py-0.5">
+												<button
+													onClick={() => setCartItems((prev) => prev.map((item) => item.id === c.id ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item))}
+													className="text-sm font-bold px-1 hover:bg-gray-100 rounded transition cursor-pointer"
+												>
+													−
+												</button>
+												<span className="text-sm font-semibold min-w-[1.5rem] text-center">{c.quantity}</span>
+												<button
+													onClick={() => setCartItems((prev) => prev.map((item) => item.id === c.id ? { ...item, quantity: Math.min(20, item.quantity + 1) } : item))}
+													className="text-sm font-bold px-1 hover:bg-gray-100 rounded transition cursor-pointer"
+												>
+													+
+												</button>
+											</div>
+											<div className="text-sm font-semibold">${(c.price * c.quantity).toFixed(2)}</div>
 										</div>
 									</div>
 								);
@@ -394,11 +437,13 @@ export default function Cashier() {
 					onAdd={(selection) => {
 						const toppings_total = selection.toppings_total ?? 0;
 						const unitPrice = Number(selectedItem.price) + Number(toppings_total);
+						const addQuantity = selection.quantity ?? 1;
+						const { quantity: _, ...selectionWithoutQuantity } = selection;
 						setCartItems((prev) => {
-							const matchIndex = prev.findIndex((c) => c.menu_item_id === selectedItem.id && JSON.stringify(c.selections) === JSON.stringify(selection));
+							const matchIndex = prev.findIndex((c) => c.menu_item_id === selectedItem.id && JSON.stringify(c.selections) === JSON.stringify(selectionWithoutQuantity));
 							if (matchIndex !== -1) {
 								const next = [...prev];
-								next[matchIndex] = { ...next[matchIndex], quantity: next[matchIndex].quantity + 1 };
+								next[matchIndex] = { ...next[matchIndex], quantity: next[matchIndex].quantity + addQuantity };
 								return next;
 							}
 							return [
@@ -408,8 +453,8 @@ export default function Cashier() {
 									menu_item_id: selectedItem.id,
 									name: selectedItem.name,
 									price: unitPrice,
-									quantity: 1,
-									selections: selection,
+									quantity: addQuantity,
+									selections: selectionWithoutQuantity,
 								},
 							];
 						});
@@ -425,7 +470,7 @@ export default function Cashier() {
 						(async () => {
 						try {
 							const results = await Promise.all(
-								CATEGORIES.map(async (cat) => {
+								drinkCategories.map(async (cat) => {
 									const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
 									return (data.items || []).map((d: any) => ({
 										id: d.id,
@@ -443,7 +488,7 @@ export default function Cashier() {
 							}
 						})();
 					}}
-				categories={CATEGORIES}
+				categories={drinkCategories}
 				item={editingDrink}
 				/>
 			)}
@@ -455,7 +500,7 @@ export default function Cashier() {
 						(async () => {
 						try {
 							const results = await Promise.all(
-								CATEGORIES.map(async (cat) => {
+								drinkCategories.map(async (cat) => {
 									const data = await makeApiCall(`/api/db/menu_items_by_category?category=${encodeURIComponent(cat)}`, "GET", null) as { items: any[] };
 									return (data.items || []).map((d: any) => ({
 										id: d.id,
@@ -472,7 +517,7 @@ console.error('Reload failed', e);
 }
 })();
 }}
-categories={CATEGORIES}
+categories={drinkCategories}
 />
 )}
 </>
