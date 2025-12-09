@@ -167,6 +167,24 @@ export default function Cart() {
     setCartItems(prev => prev.filter((_, i) => i !== index));
   };
 
+  const increaseQuantity = (index: number) => {
+    setCartItems(prev =>
+      prev.map((it, i) => (i === index ? { ...it, quantity: it.quantity + 1 } : it))
+    );
+  };
+
+  const decreaseQuantity = (index: number) => {
+    setCartItems(prev => {
+      const item = prev[index];
+      if (!item) return prev;
+      if (item.quantity > 1) {
+        return prev.map((it, i) => (i === index ? { ...it, quantity: it.quantity - 1 } : it));
+      }
+      // if quantity would go to 0, remove the item
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleOrder = () => {
     navigate("/kiosk/order", { state: { orderType: orderType } });
   };
@@ -206,6 +224,12 @@ export default function Cart() {
                 )}
               </div>
               
+              <div className="quantity-controls">
+                <button onClick={() => decreaseQuantity(index)} className="qty-btn decrement" aria-label="Decrease quantity">-</button>
+                <span className="qty-display" aria-hidden="true">{item.quantity}</span>
+                <button onClick={() => increaseQuantity(index)} className="qty-btn increment" aria-label="Increase quantity">+</button>
+              </div>
+
               <button onClick={() => removeFromCart(index)} className="remove-btn">
                 {translatedStatics['Remove'] ?? t('Remove')}
               </button>
