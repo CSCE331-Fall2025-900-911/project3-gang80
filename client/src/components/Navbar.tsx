@@ -78,6 +78,13 @@ function Navbar() {
       </div>
 
       <ul className="nav-links">
+
+        {seeNavButton("loginPage") && (
+          <li>
+            <NavLink to="/login">Login</NavLink>
+          </li>
+        )}
+
         {seeNavButton("cashier") && (
           <li>
             <NavLink to="/" end>
